@@ -1,0 +1,9 @@
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/glfw3dll.lib
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/bin/glfw3.dll
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/include/GLFW/glfw3.h
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/include/GLFW/glfw3native.h
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/cmake/glfw3/glfw3Config.cmake
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/cmake/glfw3/glfw3ConfigVersion.cmake
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/cmake/glfw3/glfw3Targets.cmake
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/cmake/glfw3/glfw3Targets-release.cmake
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glfw3_x86-windows/lib/pkgconfig/glfw3.pc

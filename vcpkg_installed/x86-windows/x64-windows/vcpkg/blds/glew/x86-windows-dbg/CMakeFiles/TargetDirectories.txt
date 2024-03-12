@@ -1,0 +1,8 @@
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/glew.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/glew_s.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/uninstall.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/edit_cache.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/rebuild_cache.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/list_install_components.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/install.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glew/x86-windows-dbg/CMakeFiles/install/local.dir

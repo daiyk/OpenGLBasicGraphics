@@ -1,0 +1,5 @@
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glm/x86-windows-rel/CMakeFiles/edit_cache.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glm/x86-windows-rel/CMakeFiles/rebuild_cache.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glm/x86-windows-rel/CMakeFiles/list_install_components.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glm/x86-windows-rel/CMakeFiles/install.dir
+D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/blds/glm/x86-windows-rel/CMakeFiles/install/local.dir

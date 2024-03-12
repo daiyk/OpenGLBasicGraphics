@@ -1,0 +1,11 @@
+prefix=D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glew_x86-windows
+exec_prefix=${prefix}
+libdir=D:/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x86-windows/vcpkg/pkgs/glew_x86-windows/lib
+includedir=${prefix}/include
+
+Name: glew
+Description: The OpenGL Extension Wrangler library
+Version: 2.2.0
+Cflags: -I${includedir} 
+Libs: -L${libdir} -lglew32 
+Requires: glu
