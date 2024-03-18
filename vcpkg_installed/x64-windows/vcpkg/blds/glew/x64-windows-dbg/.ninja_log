@@ -1,9 +1,0 @@
-# ninja log v5
-5	157	7242095807416853	CMakeFiles/glew.dir/D_/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x64-windows/vcpkg/blds/glew/src/glew-80f5997feb.clean/build/glew.rc.res	abadb55d42c85c6c
-97	170	7242095807557167	CMakeFiles/glew_s.dir/D_/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x64-windows/vcpkg/blds/glew/src/glew-80f5997feb.clean/build/glew.rc.res	2dab74f4c21bdbe3
-2	359	7242095809381416	CMakeFiles/glew.dir/D_/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x64-windows/vcpkg/blds/glew/src/glew-80f5997feb.clean/src/glew.c.obj	1f51c0a71d5b416f
-95	365	7242095809411216	CMakeFiles/glew_s.dir/D_/Repos/VSProjects/OpenGLGraphics/vcpkg_installed/x64-windows/vcpkg/blds/glew/src/glew-80f5997feb.clean/src/glew.c.obj	a9adc76df91d0a86
-367	442	7242095810225154	lib/libglew32d.lib	32b647bc77edd31e
-359	533	7242095811067025	bin/glew32d.dll	4e9bd1ed10ee4167
-359	533	7242095811067025	lib/glew32d.lib	4e9bd1ed10ee4167
-533	667	0	CMakeFiles/install.util	6a8d45e2af155889
