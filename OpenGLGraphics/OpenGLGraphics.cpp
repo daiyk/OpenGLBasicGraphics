@@ -135,7 +135,7 @@ int main()
     mainWindow.Initialise();
     Texture brickTexture = Texture("Texture/pexels.jpg");
     brickTexture.LoadTexture();
-    Texture dirtTexture = Texture("Texture/fabric_Small.jpg");
+    Texture dirtTexture = Texture("Texture/wall.jpg");
     dirtTexture.LoadTexture();
     
     GLuint bufferWidth = mainWindow.getBufferWidth();
@@ -161,19 +161,19 @@ int main()
     shaderList.push_back(shader);
     
 
-    //light direction vec, 45 degree angle downwards
-    glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f);
+    //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
+    glm::vec3 lightDirection = glm::vec3(0.0f, glm::sqrt(2.0f) / 2.0f, glm::sqrt(2.0f) / 2.0f);
     //create the light object
     Light mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.0f, 0.0f, 0.0f, lightDirection, 0.9f);
 
     //create point light
     pointLight[0] = PointLight(0.0f, 0.0f, 1.0f, 
                                0.1f, 1.0f, 
-                               2.0f, 1.0f, 0.0f, 
+                               2.0f, 0.5f, 0.0f, 
                                0.3f, 0.2f, 0.1f);
     pointLight[1] = PointLight(1.0f, 0.0f, 0.0f,
                                0.1f, 1.0f,
-							   0.0f, 1.0f, 2.5f,
+							   0.0f, 0.5f, 2.5f,
 							   0.3f, 0.2f, 0.1f);
     unsigned int pointLightCount = 2;
     //assign loc to point light

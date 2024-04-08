@@ -33,6 +33,7 @@ struct Material
     float specularIntensity;
 };
 
+//assume the directionaLight is incident direction: from the light source to the fragments
 uniform DirectionalLight directionalLight;
 uniform PointLight pointLights[NUM_POINT_LIGHTS];
 uniform Material material;
@@ -40,6 +41,9 @@ uniform sampler2D tex;
 uniform int pointLightCount;
 uniform vec3 cameraPosition;
 
+/// <summary>
+/// Calculate the light by direction, direction is the reverse direction, from the fragment to the light source
+/// </summary>
 vec4 CalLightByDirection(BaseLight light, vec3 direction)
 {
 	float diffuseFactor = max(dot(normalize(Normal), normalize(direction)),0.0f);
@@ -47,6 +51,7 @@ vec4 CalLightByDirection(BaseLight light, vec3 direction)
     vec4 ambientColor = vec4(light.color, 1.0f) * light.ambientIntensity;
     vec3 viewDirection = normalize(cameraPosition - fragPos);
 
+    //reflect use the incident vector
     float specularFac = max(dot(reflect(-direction, normalize(Normal)), viewDirection), 0.0f);
     specularFac = pow(specularFac, material.shininess);
     vec4 specularColor  = vec4(light.color, 1.0f) * specularFac * material.specularIntensity;
@@ -55,7 +60,8 @@ vec4 CalLightByDirection(BaseLight light, vec3 direction)
 
 vec4 CalDirectionalLight()
 {
-	return CalLightByDirection(directionalLight.base, directionalLight.direction);
+    //assume the directionLight is incident direction, thus need reverse the direction
+	return CalLightByDirection(directionalLight.base, -directionalLight.direction);
 }
 
 vec4 CalPointLight()
@@ -68,7 +74,7 @@ vec4 CalPointLight()
         float distance = length(direction);
         direction = normalize(direction);
         float attenuation = pointLights[i].constant + pointLights[i].linear * distance + pointLights[i].exponent * distance * distance;
-        result += vec4(CalLightByDirection(pointLights[i].base,direction).xyz/attenuation, 1.0f); //CalLightByDirection(pointLights[i].base, direction).xyz/attenuation;
+        result += vec4(CalLightByDirection(pointLights[i].base,-direction).xyz/attenuation, 1.0f); //CalLightByDirection(pointLights[i].base, direction).xyz/attenuation;
         
     }
 	return result;
@@ -78,6 +84,7 @@ void main()
 {   
     vec4 directionColor = CalDirectionalLight();
     vec4 pointColor = CalPointLight();
-    colour = texture(tex, vTex) * (pointColor);
-
+    //if(pointLightCount > 0)
+		//pointColor = vec4(1.0f,1.0f,1.0f, 1.0f);
+    colour = texture(tex, vTex) * (pointColor+directionColor);
 }
