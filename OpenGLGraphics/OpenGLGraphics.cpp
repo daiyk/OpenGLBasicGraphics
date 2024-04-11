@@ -21,6 +21,7 @@
 #include "PointLight.h"
 #include "Materials.h"
 #include "MeshData.h"
+#include "SpotLight.h"
 
 const GLint WIDTH = 1600, HEIGHT = 900; //set the window size
 GLuint VAO, VBO, EBO, shader, MoveLocation, ProjectionLocation, ViewLocation, ambientColorLoc, ambientIntensityLoc,matSpeculInt, matSpeculShin, diffuseIntensityLoc, LightDirectionLoc;
@@ -86,10 +87,10 @@ void CreateTriangle()
     };
 
     GLfloat floorVertices[] = {
-		-10.0f,0.0f,-10.0f,0.0f,0.0f,0.0f,-1.0f,0.0f,
-		10.0f,0.0f,-10.0f,10.0f,0.0f,0.0f,-1.0f,0.0f,
-		10.0f,0.0f,10.0f,10.0f,10.0f,0.0f,-1.0f,0.0f,
-		-10.0f,0.0f,10.0f,0.0f,10.0f,0.0f,-1.0f,0.0f
+		-10.0f,0.0f,-10.0f,0.0f,0.0f,0.0f,1.0f,0.0f,
+		10.0f,0.0f,-10.0f,10.0f,0.0f,0.0f,1.0f,0.0f,
+		10.0f,0.0f,10.0f,10.0f,10.0f,0.0f,1.0f,0.0f,
+		-10.0f,0.0f,10.0f,0.0f,10.0f,0.0f,1.0f,0.0f
 	};
 
     //build indices for the floor, two triangles meshes
@@ -162,14 +163,14 @@ int main()
     
 
     //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
-    glm::vec3 lightDirection = glm::vec3(0.0f, glm::sqrt(2.0f) / 2.0f, glm::sqrt(2.0f) / 2.0f);
+    glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f); //-glm::sqrt(2.0f) / 2.0f
     //create the light object
     Light mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.0f, 0.0f, 0.0f, lightDirection, 0.9f);
 
     //create point light
     pointLight[0] = PointLight(0.0f, 0.0f, 1.0f, 
-                               0.1f, 1.0f, 
-                               2.0f, 0.5f, 0.0f, 
+                               0.8f, 2.0f, 
+                               2.0f, 2.0f, -2.0f, 
                                0.3f, 0.2f, 0.1f);
     pointLight[1] = PointLight(1.0f, 0.0f, 0.0f,
                                0.1f, 1.0f,
@@ -181,7 +182,7 @@ int main()
 
     //create Material
     Materials dullMaterial = Materials(0.8f, 32.0f);
-    Materials shinyMaterial = Materials(4.0f, 256.0f);
+    Materials shinyMaterial = Materials(4.0f, 128.0f);
 
     //initialize the camera object
     Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0, 1.0f, 0.0f), 90.0f, 0.0f, 0.5f, 0.01f);
@@ -197,12 +198,14 @@ int main()
     matSpeculShin = shaderList[0].GetSpecularShininessLocation();
 
     double lastTime = glfwGetTime();
+    double accuTime = glfwGetTime();
     //loop until window closed
     while (!mainWindow.getShouldClose())
     {
         double currentTime = glfwGetTime();
         camera.KeyControl(mainWindow.getKeys(), currentTime - lastTime);
         camera.MouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+
         lastTime = currentTime;
         //get + handle user input events(keyboard, mouse, etc.)
         glfwPollEvents();
@@ -225,7 +228,7 @@ int main()
         shaderList[0].UseShader(); //use the shader program
         
         glm::mat4 model(1.0f); //create the model matrix with identity matrix
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.5f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.5f)); //move the model front around 2.5meters
         model = glm::rotate(model, triOffset, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
         

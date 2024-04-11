@@ -86,5 +86,5 @@ void main()
     vec4 pointColor = CalPointLight();
     //if(pointLightCount > 0)
 		//pointColor = vec4(1.0f,1.0f,1.0f, 1.0f);
-    colour = texture(tex, vTex) * (pointColor+directionColor);
+    colour = texture(tex, vTex) * (pointColor);//+directionColor);
 }

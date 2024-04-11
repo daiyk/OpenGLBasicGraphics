@@ -15,7 +15,7 @@ Light::Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLflo
 	position = glm::vec3(x, y, z);
 	color = glm::vec3(red, green, blue);
 	ambientStrength = aIntensity;
-	this->direction = -glm::vec3(direction);
+	this->direction = glm::vec3(direction);
 	this->diffuseStrength = diffuseIntensity;
 }
 
