@@ -9,14 +9,13 @@ class SpotLight: public PointLight
 			GLfloat x, GLfloat y, GLfloat z, 
 			glm::vec3 direction, 
 			GLfloat c, GLfloat l, GLfloat q, 
-			GLfloat edge);
+			GLfloat edge, GLfloat outerEdge);
 		void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseStrengthLoc,
 			GLuint LightPositionLocation, GLuint LightDirectionLocation, 
 			GLuint constantLoc, GLuint linearLoc, GLuint quadraticLoc, 
-			GLuint edgeLoc);
-		void SetFlash(glm::vec3 pos, glm::vec3 dir);
+			GLuint edgeLoc, GLuint outerEdgeLoc);
 	private:
 		glm::vec3 direction;
-		GLfloat edge, procEdge;//cosine of the edge radian
+		GLfloat edge, softOuterEdge, procEdge, procOuterEdge;//cosine of the edge radian
 };
 

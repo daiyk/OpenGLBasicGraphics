@@ -5,6 +5,7 @@
 #include <fstream>
 #include <GL/glew.h>
 #include "PointLight.h"
+#include "SpotLight.h"
 
 class Shader
 {
@@ -25,6 +26,8 @@ public:
 	GLuint GetSpecularIntensityLocation();
 	GLuint GetSpecularShininessLocation();
 	GLuint* GetPointLightCountLocation();
+	GLuint* GetSpotLightCountLocation();
+
 	void AssignUniformCameraPosition(const char* uniformName);
 	void AssignUniformDiffuseIntensityLoc(const char* uniformName);
 	void AssignUniformDirectionLoc(const char* uniformName);
@@ -40,10 +43,9 @@ public:
 	GLuint GetShaderLocation();
 
 	void SetPointLights(PointLight * _pointLights, unsigned int _lightCount);
+	void SetSpotLights(SpotLight* _spotLights, unsigned int _lightCount);
 	void UseShader();
 	void ClearShader();
-	//light parts
-	int pointLightCount;
 	/// <summary>
 	/// basic light components
 	/// </summary>
@@ -60,18 +62,30 @@ public:
 		GLuint uniformDirection;
 	} directionalLight;
 
-	struct
+	/// <summary>
+	/// maximum point lights number is defined in light.h
+	/// </summary>
+	struct pointLight
 	{
-		BaseLight base;
+		BaseLight baseLight;
 		GLuint uniformPosition;
 		GLuint uniformConstant;
 		GLuint uniformLinear;
 		GLuint uniformExponent;
 	} pointLights[NUM_POINT_LIGHTS];
+	/// <summary>
+	/// maximum spot lights number is defined in light.h
+	/// </summary>
+	struct {
+		pointLight basePointLight;
+		GLuint uniformSpotDirection;
+		GLuint uniformEdge;
+		GLuint uniformOuterEdge;
+	} spotLights[NUM_SPOT_LIGHTS];
 
 private:
 	GLuint cameraPosition, shaderProgram=0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,uniformMatSpecularShinLoc;
-	GLuint pointLightsCountLoc;
+	GLuint pointLightsCountLoc, spotLightsCountLoc; //light components
 	void CompileShader(const char* vertexCode, const char* fragmentCode);
 	void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType);
 

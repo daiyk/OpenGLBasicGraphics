@@ -4,19 +4,18 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 //define a constant of number of point light
-#define NUM_POINT_LIGHTS 4
+#define NUM_POINT_LIGHTS 5
+#define NUM_SPOT_LIGHTS 5
 
 class Light
 {
 	public:
 		Light(); 
-		Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLfloat x, GLfloat y, GLfloat z, glm::vec3 direction, GLfloat diffuseIntensity);
-
-		void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseLocation, GLuint diffuseStrength);
+		Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLfloat diffuseIntensity);
+		Light(Light& light);
+		void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseStrength);
 protected:
-	glm::vec3 position;
 	glm::vec3 color;
-	glm::vec3 direction; //if the light is a directional light
 	GLfloat ambientStrength;
 	GLfloat diffuseStrength;
 };

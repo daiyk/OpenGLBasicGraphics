@@ -18,10 +18,12 @@
 #include "Camera.h"
 #include "Texture.h"
 #include "Light.h"
+#include "DirectionalLight.h"
+#include "SpotLight.h"
 #include "PointLight.h"
 #include "Materials.h"
 #include "MeshData.h"
-#include "SpotLight.h"
+
 
 const GLint WIDTH = 1600, HEIGHT = 900; //set the window size
 GLuint VAO, VBO, EBO, shader, MoveLocation, ProjectionLocation, ViewLocation, ambientColorLoc, ambientIntensityLoc,matSpeculInt, matSpeculShin, diffuseIntensityLoc, LightDirectionLoc;
@@ -37,6 +39,8 @@ std::vector<MeshData> meshList;
 std::vector<Shader> shaderList;
 
 PointLight pointLight[NUM_POINT_LIGHTS];
+SpotLight spotLight[NUM_SPOT_LIGHTS];
+
 //variables holding textures
 Texture brickTexture;
 Texture dirtTexture;
@@ -157,32 +161,58 @@ int main()
     shader.AssignUniformDirectionLoc("directionalLight.direction");
     shader.AssignUniformMatSpecularIntLoc("material.specularIntensity");
     shader.AssignUniformMatSpecularShinLoc("material.shininess");
+
+    //set light count, special here since this is a single parameter
     auto plcLoction = shader.GetPointLightCountLocation();
     shader.AssignUniformLocWithName("pointLightCount", plcLoction);
+    auto slcLoction = shader.GetSpotLightCountLocation();
+    shader.AssignUniformLocWithName("spotLightCount", slcLoction);
+
+    //---------FinalStep other shader settings should before this line---------//
     shaderList.push_back(shader);
+
     
 
+    
+    //-------Create Light components--------//
     //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
     glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f); //-glm::sqrt(2.0f) / 2.0f
     //create the light object
-    Light mainLight = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.0f, 0.0f, 0.0f, lightDirection, 0.9f);
+    Light light = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.6f);
+    DirectionalLight mainLight(light, lightDirection);
 
     //create point light
     pointLight[0] = PointLight(0.0f, 0.0f, 1.0f, 
-                               0.8f, 2.0f, 
+                               0.1f, 1.0f, 
                                2.0f, 2.0f, -2.0f, 
                                0.3f, 0.2f, 0.1f);
     pointLight[1] = PointLight(1.0f, 0.0f, 0.0f,
-                               0.1f, 1.0f,
-							   0.0f, 0.5f, 2.5f,
+                               0.6f, 1.0f,
+							   0.0f, 0.0f, -2.0f,
 							   0.3f, 0.2f, 0.1f);
     unsigned int pointLightCount = 2;
-    //assign loc to point light
+
+    //create spot light
+    spotLight[0] = SpotLight(0.0f, 1.0f, 0.0f,
+        					0.1f, 4.0f,
+        					0.0f, 0.0f, -1.5f,
+        					glm::vec3(0.0f,0.0f,-1.0f),
+        					0.4f, 0.3f, 0.2f,
+        					5.0f, 30.0f);
+    spotLight[1] = SpotLight(1.0f, 1.0f, 0.0f,
+        					0.1f, 3.0f,
+        					0.0f, 3.0f, -2.5f,
+        					glm::vec3(0.0f,-1.0f,0.0f),
+        					0.4f, 0.3f, 0.2f,
+        					20.0f, 30.f);
+    unsigned int spotLightCount = 2;
+    //-------End Light creation --------//
+
     glEnable(GL_DEPTH_TEST); //enable depth testing
 
     //create Material
     Materials dullMaterial = Materials(0.8f, 32.0f);
-    Materials shinyMaterial = Materials(4.0f, 128.0f);
+    Materials shinyMaterial = Materials(4.0f, 256.0f);
 
     //initialize the camera object
     Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0, 1.0f, 0.0f), 90.0f, 0.0f, 0.5f, 0.01f);
@@ -236,23 +266,29 @@ int main()
         
         //model = glm::translate(model,glm::vec3(triOffset, triOffset, 0.0f)); //translate the model matrix   
 
-        //set the uniform variable value
+        //set the uniform geometric transformation variable value
         glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(ProjectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(ViewLocation, 1, GL_FALSE, glm::value_ptr(viewMat));
         //assign camera position to the shader
         glUniform3f(shaderList[0].GetCameraPosition(), camera.GetCameraPosition().x, camera.GetCameraPosition().y,camera.GetCameraPosition().z);
+        
+        //Set up TExture
         brickTexture.UseTexture();
-        mainLight.UseLight(ambientIntensityLoc, ambientColorLoc,LightDirectionLoc, diffuseIntensityLoc);
-        shaderList[0].SetPointLights(pointLight,pointLightCount);
 
+        //Set up the light conditions
+        mainLight.UseLight(ambientIntensityLoc, ambientColorLoc,diffuseIntensityLoc, LightDirectionLoc);
+        shaderList[0].SetPointLights(pointLight,pointLightCount);
+        shaderList[0].SetSpotLights(spotLight, spotLightCount);
+
+        //set up material and render the two pyramids
         shinyMaterial.UseMaterial(matSpeculInt, matSpeculShin);
         meshList[0].RenderMesh(); //render the mesh
 
         dirtTexture.UseTexture();
         meshList[1].RenderMesh(); //render the mesh
 
-        
+        //set up the ground object
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
         glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
