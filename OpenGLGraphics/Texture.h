@@ -9,6 +9,7 @@ class Texture
 		Texture(const char* fileLoc);
 		~Texture();
 		bool LoadTexture();
+		bool LoadTextureWithAlpha();
 		void UseTexture();
 		void ClearTexture();
 	private:

@@ -13,6 +13,7 @@
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <assimp/Importer.hpp>
 #include "Shader.h"
 #include "Window.h"
 #include "Camera.h"
@@ -133,21 +134,26 @@ void CreateTriangle()
 
 int main()
 {
+    ///-----Main UI Windows Init-----///
     meshList.reserve(10);
     const char* vShader = "Shaders/firstShader.vert";
     const char* fShader = "Shaders/firstShader.frag";
     Window mainWindow = Window(WIDTH, HEIGHT);
     mainWindow.Initialise();
+
+    GLuint bufferWidth = mainWindow.getBufferWidth();
+    GLuint bufferHeight = mainWindow.getBufferHeight();
+
+    ///-----Load Texture-----///
     Texture brickTexture = Texture("Texture/pexels.jpg");
     brickTexture.LoadTexture();
     Texture dirtTexture = Texture("Texture/wall.jpg");
     dirtTexture.LoadTexture();
-    
-    GLuint bufferWidth = mainWindow.getBufferWidth();
-    GLuint bufferHeight = mainWindow.getBufferHeight();
+
+    ///-----Create Triangle(Mesh)-----///
     CreateTriangle();
 
-    //build shader
+    ///-----build shader-----///
     Shader shader = Shader();
     //shader.CreateFromString(vShader, fShader);
     shader.CreateFromFiles(vShader, fShader);
@@ -162,16 +168,10 @@ int main()
     shader.AssignUniformMatSpecularIntLoc("material.specularIntensity");
     shader.AssignUniformMatSpecularShinLoc("material.shininess");
 
-    //set light count, special here since this is a single parameter
-    auto plcLoction = shader.GetPointLightCountLocation();
-    shader.AssignUniformLocWithName("pointLightCount", plcLoction);
-    auto slcLoction = shader.GetSpotLightCountLocation();
-    shader.AssignUniformLocWithName("spotLightCount", slcLoction);
 
-    //---------FinalStep other shader settings should before this line---------//
+    //NOTICE---------FinalStep other shader settings should before this line---------NOTICE//
+
     shaderList.push_back(shader);
-
-    
 
     
     //-------Create Light components--------//
@@ -193,22 +193,24 @@ int main()
     unsigned int pointLightCount = 2;
 
     //create spot light
-    spotLight[0] = SpotLight(0.0f, 1.0f, 0.0f,
+    spotLight[0] = SpotLight(1.0f, 1.0f, 1.0f,
         					0.1f, 4.0f,
         					0.0f, 0.0f, -1.5f,
         					glm::vec3(0.0f,0.0f,-1.0f),
         					0.4f, 0.3f, 0.2f,
         					5.0f, 30.0f);
     spotLight[1] = SpotLight(1.0f, 1.0f, 0.0f,
-        					0.1f, 3.0f,
+        					0.1f, 2.0f,
         					0.0f, 3.0f, -2.5f,
         					glm::vec3(0.0f,-1.0f,0.0f),
-        					0.4f, 0.3f, 0.2f,
+        					1.0f, 0.0f, 0.0f,
         					20.0f, 30.f);
     unsigned int spotLightCount = 2;
     //-------End Light creation --------//
 
     glEnable(GL_DEPTH_TEST); //enable depth testing
+
+    Assimp::Importer importer = Assimp::Importer();
 
     //create Material
     Materials dullMaterial = Materials(0.8f, 32.0f);
@@ -262,7 +264,7 @@ int main()
         model = glm::rotate(model, triOffset, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
         
-        glm::mat4 viewMat = camera.getViewMatrix();
+        glm::mat4 viewMat = camera.GetViewMatrix();
         
         //model = glm::translate(model,glm::vec3(triOffset, triOffset, 0.0f)); //translate the model matrix   
 
@@ -279,6 +281,8 @@ int main()
         //Set up the light conditions
         mainLight.UseLight(ambientIntensityLoc, ambientColorLoc,diffuseIntensityLoc, LightDirectionLoc);
         shaderList[0].SetPointLights(pointLight,pointLightCount);
+        //update the spot light pose to align with the camera before set the spotlights
+        spotLight[0].SetPose(camera.GetCameraPosition()+glm::vec3(0.0f,-0.5f,0.0f), camera.GetFrontDirection());
         shaderList[0].SetSpotLights(spotLight, spotLightCount);
 
         //set up material and render the two pyramids

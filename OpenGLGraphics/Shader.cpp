@@ -131,6 +131,8 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 		return;
 	}
 
+	///-----Set up Lights components' uniform locations ----///
+	//pointlights
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
 
@@ -154,6 +156,8 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 		locStr = locBuff;
 		pointLights[i].uniformExponent = glGetUniformLocation(shaderProgram, locStr.c_str());
 	}
+	pointLightsCountLoc = glGetUniformLocation(shaderProgram, "pointLightCount");
+
 	//spotlight
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
@@ -184,6 +188,8 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].outerEdge", i);
 		spotLights[i].uniformOuterEdge = glGetUniformLocation(shaderProgram, locBuff);
 	}
+	spotLightsCountLoc = glGetUniformLocation(shaderProgram, "spotLightCount");
+	///---- end of setting up lights components' uniform locations ----///
 }
 
 void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation) {

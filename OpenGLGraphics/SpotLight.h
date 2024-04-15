@@ -14,6 +14,7 @@ class SpotLight: public PointLight
 			GLuint LightPositionLocation, GLuint LightDirectionLocation, 
 			GLuint constantLoc, GLuint linearLoc, GLuint quadraticLoc, 
 			GLuint edgeLoc, GLuint outerEdgeLoc);
+		void SetPose(glm::vec3 pos, glm::vec3 dir);
 	private:
 		glm::vec3 direction;
 		GLfloat edge, softOuterEdge, procEdge, procOuterEdge;//cosine of the edge radian

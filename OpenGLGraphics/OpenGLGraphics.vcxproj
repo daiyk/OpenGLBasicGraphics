@@ -137,6 +137,7 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Materials.cpp" />
     <ClCompile Include="MeshData.cpp" />
+    <ClCompile Include="ModelData.cpp" />
     <ClCompile Include="OpenGLGraphics.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Shader.cpp" />
@@ -150,8 +151,10 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Materials.h" />
     <ClInclude Include="MeshData.h" />
+    <ClInclude Include="ModelData.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
