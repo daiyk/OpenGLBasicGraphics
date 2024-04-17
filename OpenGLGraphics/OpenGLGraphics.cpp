@@ -177,9 +177,9 @@ int main()
     //-------Create Light components--------//
     //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
     glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f); //-glm::sqrt(2.0f) / 2.0f
+    Light lightsource = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.6f);
     //create the light object
-    Light light = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.6f);
-    DirectionalLight mainLight(light, lightDirection);
+    DirectionalLight mainLight(lightsource, lightDirection);
 
     //create point light
     pointLight[0] = PointLight(0.0f, 0.0f, 1.0f, 
@@ -312,11 +312,3 @@ int main()
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
