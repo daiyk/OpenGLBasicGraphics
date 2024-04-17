@@ -20,7 +20,7 @@ private:
 	bool LoadNode(aiNode* node, const aiScene* scene);
 	bool LoadMaterials(const aiScene* scene);
 	bool LoadTextures(aiTexture* texture);
-	//void LoadMesh(aiMesh* mesh, const aiScene* scene);
+	bool LoadMesh(aiMesh* mesh, const aiScene* scene);
 	//Vertex Data
 	std::vector<MeshData> _meshes;
 	std::vector<Materials> _materials;

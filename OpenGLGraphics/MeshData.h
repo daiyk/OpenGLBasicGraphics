@@ -1,5 +1,12 @@
 #pragma once
 #include <gl/glew.h>
+#include <glm/glm.hpp>
+
+struct Vertex{
+	glm::vec3 position;
+	glm::vec2 texcoord;
+	glm::vec3 normal;
+};
 class MeshData
 {
 
