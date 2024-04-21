@@ -52,7 +52,14 @@ uniform int spotLightCount;
 
 //material and texture components
 uniform Material material;
-uniform sampler2D tex;
+
+//texture samplers
+uniform sampler2D texture_diffuse0;
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_diffuse2;
+uniform sampler2D texture_specular0;
+uniform sampler2D texture_specular1;
+uniform sampler2D texture_specular2;
 
 uniform vec3 cameraPosition;
 
@@ -70,7 +77,7 @@ vec4 CalLightByDirection(BaseLight light, vec3 direction)
     float specularFac = max(dot(reflect(-direction, normalize(Normal)), viewDirection), 0.0f);
     specularFac = pow(specularFac, material.shininess);
     vec4 specularColor  = vec4(light.color, 1.0f) * specularFac * material.specularIntensity;
-    return texture(tex, vTex) * (ambientColor + diffuseColor + specularColor);
+    return texture(texture_diffuse0, vTex) * (ambientColor + diffuseColor + specularColor);
 }
 
 vec4 CalDirectionalLight()
@@ -124,5 +131,5 @@ void main()
     vec4 directionColor = CalDirectionalLight();
     vec4 pointColor = CalTotalPointLight();
     vec4 spotLight = CalTotalSpotLight();
-    colour = texture(tex, vTex) * (spotLight);
+    colour = texture(texture_diffuse0, vTex) * (spotLight);
 }
