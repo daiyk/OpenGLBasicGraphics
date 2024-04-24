@@ -48,6 +48,7 @@ void MeshData::RenderMesh()
 bool MeshData::SetVertices(std::vector<Vertex> vertices) {
 	//vertices must have at least one vertex, otherwise return false
 	if (vertices.size() == 0) return false;
+	indexCount = vertices.size();
 	//allocate memory for the vertices, 3 positions, 2 texcoords, 3 normals
 	GLfloat* verticesPtr = new GLfloat[vertices.size() * 8];
 	//copy the vertices to the verticesPtr
@@ -62,7 +63,7 @@ bool MeshData::SetVertices(std::vector<Vertex> vertices) {
 		verticesPtr[i * 8 + 6] = vertices[i].normal.y;
 		verticesPtr[i * 8 + 7] = vertices[i].normal.z;
 	}
-	unsigned int verticsElementNum = sizeof(verticesPtr) / sizeof(*verticesPtr);
+	unsigned int verticsElementNum = vertices.size() * 8;
 	//set up the vertex data
 	glBindVertexArray(VAO); //bind the VAO
 	glGenBuffers(1, &VBO); //generate the VBO
@@ -76,7 +77,7 @@ bool MeshData::SetVertices(std::vector<Vertex> vertices) {
 	glEnableVertexAttribArray(2); //enable vertex attribute array
 	glBindVertexArray(0); //unbind the VAO
 	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind the VBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //unbind the EBO
+	//delete[] verticesPtr; //delete the verticesPtr
 	return true;
 }
 
@@ -90,7 +91,7 @@ bool MeshData::SetIndices(std::vector<unsigned int> indices) {
 	{
 		indicesPtr[i] = indices[i];
 	}
-	unsigned int indicesNum = sizeof(indicesPtr) / sizeof(*indicesPtr);
+	unsigned int indicesNum = indices.size();
 	//set up the indices data
 	glBindVertexArray(VAO); //bind the VAO
 	glGenBuffers(1, &EBO); //generate the EBO
@@ -98,6 +99,7 @@ bool MeshData::SetIndices(std::vector<unsigned int> indices) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesPtr[0]) * indicesNum, indicesPtr, GL_STATIC_DRAW); //pass the data to the EBO
 	glBindVertexArray(0); //unbind the VAO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); //unbind the EBO
+	//delete[] indicesPtr; //delete the indicesPtr
 	return true;
 }
 

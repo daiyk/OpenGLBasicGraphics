@@ -19,6 +19,7 @@ Texture::Texture(const char* fileLoc)
 	fileLocation = fileLoc;
 }
 
+//function that construct with 
 Texture::Texture(const char* fileLoc, aiTextureType type)
 {
 	textureID = 0;
@@ -84,12 +85,12 @@ bool Texture::LoadTextureWithAlpha() {
 	return true;
 }
 
-void Texture::UseTexture(GLuint layer = 0)
+void Texture::UseTexture(GLuint layer)
 {
 	//set the texture to the texture unit number 0
 	//deactivate any previous loaded texture and then active and bind this texture
 	
-	glActiveTexture(GL_TEXTURE0+layer); //activate the texture in the specified layer
+	glActiveTexture(GL_TEXTURE0+layer); //activate the texture in the specific location
 	glBindTexture(GL_TEXTURE_2D, textureID); //bind the texture
 	//in fragment shader, use uniform sampler2D texture0 to access the texture
 }

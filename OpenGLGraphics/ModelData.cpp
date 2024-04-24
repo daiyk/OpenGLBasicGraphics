@@ -8,7 +8,7 @@ ModelData::ModelData() {
 }
  
 bool ModelData::LoadMesh(aiMesh* mesh, const aiScene* scene) {
-	MeshData meshData = MeshData();
+	MeshData* meshData = new MeshData();
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
@@ -35,8 +35,8 @@ bool ModelData::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 	}
 	_meshTomaterialsIndx.push_back(mesh->mMaterialIndex);
-	meshData.SetVertices(vertices);
-	meshData.SetIndices(indices);
+	meshData->SetVertices(vertices);
+	meshData->SetIndices(indices);
 	_meshes.push_back(meshData);
 	return true;
 }
@@ -57,7 +57,8 @@ bool ModelData::LoadNode(aiNode* node, const aiScene* scene) {
 //NOTICE: this class depends on aiProcess_Triangulate | aiProcess_GenSmoothNormals to keep triangle mesh and normals for the mesh
 bool ModelData::LoadModel(const std::string& fileName) {
 	Assimp::Importer importer = Assimp::Importer();
-	_scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
+	//NOTE: scene will be destroyed when the this function ends
+	_scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs);// | aiProcess_GenSmoothNormals);// | aiProcess_JoinIdenticalVertices);
 	if (!_scene) {
 		printf("Model (%s) failed to load: %s", fileName.c_str(), importer.GetErrorString());
 		return false;
@@ -74,43 +75,80 @@ bool ModelData::LoadMaterials(const aiScene* scene) {
 	if(!scene->HasMaterials()) return false;
 	for (size_t i = 0; i < scene->mNumMaterials; i++) {
 		//load different types of materials
-
 		aiMaterial* material = scene->mMaterials[i];
 		Materials mat = Materials(material);
 		//load diffuse textures
-		LoadTextures(material, aiTextureType_DIFFUSE);
+		LoadTextures(material, aiTextureType_DIFFUSE, mat.textureIndices);
 		//load specular textures
-		LoadTextures(material, aiTextureType_SPECULAR);
+		LoadTextures(material, aiTextureType_SPECULAR, mat.textureIndices);
 		_materials.push_back(mat);
 	}
 	return true;
 }
-
-bool ModelData::LoadTextures(aiMaterial *material, aiTextureType type) {
+/// <summary>
+/// Not parallel safe, because it modifies the _textures vector
+/// </summary>
+/// <param name="material"></param>
+/// <param name="type"></param>
+/// <param name="indices"></param>
+/// <returns></returns>
+bool ModelData::LoadTextures(aiMaterial *material, aiTextureType type, std::vector<size_t> &indices) {
 
 	if(!material->GetTextureCount(type)) return false;
+	size_t textureIndice = _textures.size();
 	for (size_t j = 0; j < material->GetTextureCount(type); j++) {
 		aiString str;
 		material->GetTexture(type, j, &str);
 		//get the texture path, NOTE: texture must be local and in sub-directory of the model file
-		Texture texture = Texture((_modelPath.remove_filename() / std::filesystem::path(str.C_Str()).filename()).string().c_str(), type);
-		if (texture.LoadTexture()) {
+		std::string fileLocation = (_modelPath.parent_path() / std::filesystem::path(str.C_Str()).filename()).string();
+		Texture *texture = new Texture(fileLocation.c_str(), type);
+		if (texture->LoadTexture()) {
 			_textures.push_back(texture);
+			indices.push_back(textureIndice++);
 		}
 		else {
-			texture.ResetTexture("Textures/default.png");
-			texture.LoadTexture();
+			texture->ResetTexture("Texture/default.jpg");
+			texture->LoadTexture();
 			_textures.push_back(texture);
+			indices.push_back(textureIndice++);
 		}
 	}
 	return true;
 }
 
-void ModelData::RenderModel() {
+//render every mesh in this model
+void ModelData::RenderModel(Shader &shader) {
 	for (size_t i = 0; i < _meshes.size(); i++) {
 		//get the material index for the mesh
-		Texture texture = _textures[_meshTomaterialsIndx[i]];
+		Materials material = _materials[_meshTomaterialsIndx[i]];
+		///------- bind the sampler with the texture unit ---- ///
+		int diffuseNr = 0;
+		int specularNr = 0;
+		for (size_t j = 0; j < material.textureIndices.size(); j++) {
+			_textures[material.textureIndices[j]]-> UseTexture(j);
+			if (_textures[material.textureIndices[j]]->GetTextureType() == aiTextureType_DIFFUSE) {
+				//bind the uniform sampler to the texture unit, so the shader can use it, with name "texture_diffuse"+diffuseNr
+				glUniform1i(glGetUniformLocation(shader.GetShaderLocation(), ("texture_diffuse" + std::to_string(diffuseNr++)).c_str()), j);
+			}
+			else if (_textures[material.textureIndices[j]]->GetTextureType() == aiTextureType_SPECULAR) {
+				glUniform1i(glGetUniformLocation(shader.GetShaderLocation(), ("texture_specular" + std::to_string(specularNr++)).c_str()), j);
+			}
+		}
 		//render the mesh
-		_meshes[i].RenderMesh();
+		_meshes[i]->RenderMesh();
 	}
+}
+
+void ModelData::ClearModel() {
+	for (size_t i = 0; i < _meshes.size(); i++) {
+		_meshes[i]->ClearMesh();
+		delete _meshes[i];
+	}
+	for (size_t i = 0; i < _textures.size(); i++) {
+		_textures[i]->ClearTexture();
+		delete _textures[i];
+	}
+}
+ModelData::~ModelData() {
+	ClearModel();
 }

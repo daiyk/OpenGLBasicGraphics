@@ -24,6 +24,7 @@
 #include "PointLight.h"
 #include "Materials.h"
 #include "MeshData.h"
+#include "ModelData.h"
 
 
 const GLint WIDTH = 1600, HEIGHT = 900; //set the window size
@@ -210,7 +211,11 @@ int main()
 
     glEnable(GL_DEPTH_TEST); //enable depth testing
 
-    Assimp::Importer importer = Assimp::Importer();
+    /// --- import model --- ///
+    ModelData modelData = ModelData();
+    modelData.LoadModel("Models/backpack.obj");
+
+    /// --- End import model --- ///
 
     //create Material
     Materials dullMaterial = Materials(0.8f, 32.0f);
@@ -301,12 +306,20 @@ int main()
         meshList[2].RenderMesh(); //render the mesh
 
 
+        //set up the ground object
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
+        glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
+        shinyMaterial.UseMaterial(matSpeculInt, matSpeculShin);
+        modelData.RenderModel(shaderList[0]);
+
         glUseProgram(0); //unbind the shader program
 
         mainWindow.swapBuffers();//swap the buffers, double buffering
+        glfwPollEvents();
 
-        
     }
+    glfwTerminate(); //terminate GLFW
     return 0;
 }
 

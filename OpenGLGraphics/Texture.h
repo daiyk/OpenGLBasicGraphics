@@ -16,6 +16,8 @@ class Texture
 		bool LoadTextureWithAlpha();
 		void UseTexture(GLuint layer = 0);
 		void ClearTexture();
+	    //get assimpTextureType
+		aiTextureType GetTextureType() { return assimpTextureType; }
 	private:
 		GLuint textureID; //wrap the texture in a texture ID
 		aiTextureType assimpTextureType = aiTextureType::aiTextureType_NONE;
