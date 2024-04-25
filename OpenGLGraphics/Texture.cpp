@@ -47,15 +47,16 @@ bool Texture::LoadTexture() {
 	}
 	glGenTextures(1, &textureID); //generate the texture
 	glBindTexture(GL_TEXTURE_2D, textureID); //bind the texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData); //create the texture
+	glGenerateMipmap(GL_TEXTURE_2D); //generate the texture
 	//set the texture parameters
 	//NOTE: in opengl vec4.xyzw == vec4.rgba == vec4.strq, S and T represent the x and y coordinates of the texture or u and v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //repeat the texture if it is too small
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); //repeat the texture if it is too small
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //if the texture is too big, linearly interpolate it
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //if the texture is too small, linearly interpolate it
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData); //create the texture
-	glGenerateMipmap(GL_TEXTURE_2D); //generate the texture
-	glBindTexture(GL_TEXTURE_2D, 0); //unbind the texture
+	
+	//glBindTexture(GL_TEXTURE_2D, 0); //unbind the texture
 	stbi_image_free(texData); //free the image
 
 	return true;

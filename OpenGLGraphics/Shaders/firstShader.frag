@@ -131,5 +131,5 @@ void main()
     vec4 directionColor = CalDirectionalLight();
     vec4 pointColor = CalTotalPointLight();
     vec4 spotLight = CalTotalSpotLight();
-    colour = texture(texture_diffuse0, vTex);// * (spotLight+directionColor);
+    colour = texture(texture_diffuse0, vTex) * (spotLight+directionColor);
 }

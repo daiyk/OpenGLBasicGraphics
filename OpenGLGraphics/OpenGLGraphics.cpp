@@ -212,6 +212,7 @@ int main()
     glEnable(GL_DEPTH_TEST); //enable depth testing
 
     /// --- import model --- ///
+    stbi_set_flip_vertically_on_load(true);
     ModelData modelData = ModelData();
     modelData.LoadModel("Models/backpack.obj");
 
@@ -309,8 +310,9 @@ int main()
         //set up the ground object
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
         glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
-        shinyMaterial.UseMaterial(matSpeculInt, matSpeculShin);
+        dullMaterial.UseMaterial(matSpeculInt, matSpeculShin);
         modelData.RenderModel(shaderList[0]);
 
         glUseProgram(0); //unbind the shader program

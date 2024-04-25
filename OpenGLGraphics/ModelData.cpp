@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <filesystem>
 ModelData::ModelData() {
-	_scene = nullptr;
+
 }
  
 bool ModelData::LoadMesh(aiMesh* mesh, const aiScene* scene) {
@@ -55,10 +55,10 @@ bool ModelData::LoadNode(aiNode* node, const aiScene* scene) {
 }
 
 //NOTICE: this class depends on aiProcess_Triangulate | aiProcess_GenSmoothNormals to keep triangle mesh and normals for the mesh
-bool ModelData::LoadModel(const std::string& fileName) {
+bool ModelData::LoadModel(const std::string fileName) {
 	Assimp::Importer importer = Assimp::Importer();
 	//NOTE: scene will be destroyed when the this function ends
-	_scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs);// | aiProcess_GenSmoothNormals);// | aiProcess_JoinIdenticalVertices);
+	const aiScene* _scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
 	if (!_scene) {
 		printf("Model (%s) failed to load: %s", fileName.c_str(), importer.GetErrorString());
 		return false;
@@ -76,11 +76,13 @@ bool ModelData::LoadMaterials(const aiScene* scene) {
 	for (size_t i = 0; i < scene->mNumMaterials; i++) {
 		//load different types of materials
 		aiMaterial* material = scene->mMaterials[i];
-		Materials mat = Materials(material);
-		//load diffuse textures
-		LoadTextures(material, aiTextureType_DIFFUSE, mat.textureIndices);
+		Materials* mat = new Materials(material);
+
+		/// --- by default, we only load DIFFUSE and SPECULAR textures --- ///
+		//load diffuse types of textures
+		LoadTextures(material, aiTextureType_DIFFUSE, mat->textureIndices);
 		//load specular textures
-		LoadTextures(material, aiTextureType_SPECULAR, mat.textureIndices);
+		LoadTextures(material, aiTextureType_SPECULAR, mat->textureIndices);
 		_materials.push_back(mat);
 	}
 	return true;
@@ -120,7 +122,7 @@ bool ModelData::LoadTextures(aiMaterial *material, aiTextureType type, std::vect
 void ModelData::RenderModel(Shader &shader) {
 	for (size_t i = 0; i < _meshes.size(); i++) {
 		//get the material index for the mesh
-		Materials material = _materials[_meshTomaterialsIndx[i]];
+		Materials material = *_materials[_meshTomaterialsIndx[i]];
 		///------- bind the sampler with the texture unit ---- ///
 		int diffuseNr = 0;
 		int specularNr = 0;
@@ -136,6 +138,8 @@ void ModelData::RenderModel(Shader &shader) {
 		}
 		//render the mesh
 		_meshes[i]->RenderMesh();
+		//unbind the texture
+		glActiveTexture(GL_TEXTURE0);
 	}
 }
 
@@ -147,6 +151,9 @@ void ModelData::ClearModel() {
 	for (size_t i = 0; i < _textures.size(); i++) {
 		_textures[i]->ClearTexture();
 		delete _textures[i];
+	}
+	for (size_t i = 0; i < _materials.size(); i++) {
+		delete _materials[i];
 	}
 }
 ModelData::~ModelData() {
