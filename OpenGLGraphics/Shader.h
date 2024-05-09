@@ -3,9 +3,13 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 #include <GL/glew.h>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 #include "PointLight.h"
 #include "SpotLight.h"
+#include "PCHTypes.h"
 
 class Shader
 {
@@ -27,6 +31,7 @@ public:
 	GLuint GetSpecularShininessLocation();
 	GLuint* GetPointLightCountLocation();
 	GLuint* GetSpotLightCountLocation();
+	GLuint GetShaderLocation();
 
 	void AssignUniformCameraPosition(const char* uniformName);
 	void AssignUniformDiffuseIntensityLoc(const char* uniformName);
@@ -38,12 +43,15 @@ public:
 	void AssignUniformAmbientColorLoc(const char* uniformName);
 	void AssignUniformMatSpecularIntLoc(const char* uniformName);
 	void AssignUniformMatSpecularShinLoc(const char* uniformName);
-	void AssignUniformLocWithName(const char* uniformName, GLuint* uniformLocation);
+	GLuint GetUniformLocation(const char* uniformName);
 	std::string ReadFile(const char* fileLocation);
-	GLuint GetShaderLocation();
 
-	void SetPointLights(PointLight * _pointLights, unsigned int _lightCount);
-	void SetSpotLights(SpotLight* _spotLights, unsigned int _lightCount);
+
+	void SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount);
+	void SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount);
+	void SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit);
+
+	void SetDirectionalLightTransform(const glm::mat4* _lightTransform);
 	void UseShader();
 	void ClearShader();
 	/// <summary>
@@ -83,11 +91,13 @@ public:
 		GLuint uniformOuterEdge;
 	} spotLights[NUM_SPOT_LIGHTS];
 
+	GLuint uniformDirectionalLightTransform;
+	GLuint uniformShaderMap;
 private:
-	GLuint cameraPosition, shaderProgram=0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,uniformMatSpecularShinLoc;
+	GLuint cameraPosition, shaderProgram = 0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,
+		uniformMatSpecularShinLoc;
 	GLuint pointLightsCountLoc, spotLightsCountLoc; //light components
 	void CompileShader(const char* vertexCode, const char* fragmentCode);
 	void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType);
-
 };
 

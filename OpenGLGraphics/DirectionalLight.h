@@ -1,5 +1,8 @@
 #pragma once
 #include "Light.h"
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 class DirectionalLight :
     public Light
 {
@@ -14,7 +17,13 @@ class DirectionalLight :
 			__super::UseLight(ambientIntensityLocation, ambientColorLocation, diffuseStrengthLocation);
 			glUniform3f(directionLocation, direction.x, direction.y, direction.z);
 		};
+		ShadowMap* GetShadowMap() { return shadowMap.get(); }
+		void CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane) override;
+		void WriteShadowMap() { shadowMap->WriteShadowMap(); }
+		void FinishShadowMap(){ shadowMap->FinishWriteShadowMap(); }
+		const glm::mat4 *GetLightTransform() { return &lightTransform; }
 	private:
 		glm::vec3 direction;
+		glm::mat4 lightTransform;
 };
 

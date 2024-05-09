@@ -25,7 +25,7 @@
 #include "Materials.h"
 #include "MeshData.h"
 #include "ModelData.h"
-
+#include "PCHTypes.h"
 
 const GLint WIDTH = 1600, HEIGHT = 900; //set the window size
 GLuint VAO, VBO, EBO, shader, MoveLocation, ProjectionLocation, ViewLocation, ambientColorLoc, ambientIntensityLoc,matSpeculInt, matSpeculShin, diffuseIntensityLoc, LightDirectionLoc;
@@ -38,10 +38,10 @@ float triIncrement = 0.01f;
 //vertex data, vertex specification
 std::vector<MeshData> meshList;
 //vertex shader/fragment shader, render pipeline
-std::vector<Shader> shaderList;
+std::vector<std::unique_ptr<Shader>> shaderList;
 
-PointLight pointLight[NUM_POINT_LIGHTS];
-SpotLight spotLight[NUM_SPOT_LIGHTS];
+PointLightVector pointLight;
+SpotLightVector spotLight;
 
 //variables holding textures
 Texture brickTexture;
@@ -139,6 +139,8 @@ int main()
     meshList.reserve(10);
     const char* vShader = "Shaders/firstShader.vert";
     const char* fShader = "Shaders/firstShader.frag";
+    const char* shadowMapVShader = "Shaders/ShadowMap_Vertex.vert";
+    const char* shadowMapFShader = "Shaders/ShadowMap_Fragment.frag";
     Window mainWindow = Window(WIDTH, HEIGHT);
     mainWindow.Initialise();
 
@@ -155,58 +157,74 @@ int main()
     CreateTriangle();
 
     ///-----build shader-----///
-    Shader shader = Shader();
+    std::unique_ptr<Shader> renderShader = std::make_unique<Shader>();
     //shader.CreateFromString(vShader, fShader);
-    shader.CreateFromFiles(vShader, fShader);
-    shader.AssignUniformCameraPosition("cameraPosition");
-    shader.AssignUniformModelLoc("model");
-    shader.AssignUniformProjectLoc("projectMat");
-    shader.AssignUniformViewLoc("viewMat");
-    shader.AssignUniformAmbientColorLoc("directionalLight.base.color");
-    shader.AssignUniformAmbientIntensityLoc("directionalLight.base.ambientIntensity");
-    shader.AssignUniformDiffuseIntensityLoc("directionalLight.base.diffuseIntensity");
-    shader.AssignUniformDirectionLoc("directionalLight.direction");
-    shader.AssignUniformMatSpecularIntLoc("material.specularIntensity");
-    shader.AssignUniformMatSpecularShinLoc("material.shininess");
+    renderShader->CreateFromFiles(vShader, fShader);
+    renderShader->AssignUniformCameraPosition("cameraPosition");
+    renderShader->AssignUniformModelLoc("model");
+    renderShader->AssignUniformProjectLoc("projectMat");
+    renderShader->AssignUniformViewLoc("viewMat");
+    renderShader->AssignUniformAmbientColorLoc("directionalLight.base.color");
+    renderShader->AssignUniformAmbientIntensityLoc("directionalLight.base.ambientIntensity");
+    renderShader->AssignUniformDiffuseIntensityLoc("directionalLight.base.diffuseIntensity");
+    renderShader->AssignUniformDirectionLoc("directionalLight.direction");
+    renderShader->AssignUniformMatSpecularIntLoc("material.specularIntensity");
+    renderShader->AssignUniformMatSpecularShinLoc("material.shininess");
+    ProjectionLocation = renderShader->GetProjectionLocation();
+    MoveLocation = renderShader->GetModelLocation();
+    ViewLocation = renderShader->GetViewLocation();
+    ambientColorLoc = renderShader->GetAmbientColorLocation();
+    ambientIntensityLoc = renderShader->GetAmbientIntensityLocation();
+    diffuseIntensityLoc = renderShader->GetDiffuseIntensityLocation();
+    LightDirectionLoc = renderShader->GetDirectionLocation();
+    matSpeculInt = renderShader->GetSpecularIntensityLocation();
+    matSpeculShin = renderShader->GetSpecularShininessLocation();
 
-
+    ///-----Create ShadowMap shader ---///
+    std::unique_ptr<Shader> shadowShader = std::make_unique<Shader>();;
+    shadowShader->CreateFromFiles(shadowMapVShader, shadowMapFShader);
+    shadowShader->AssignUniformModelLoc("model");
+    
     //NOTICE---------FinalStep other shader settings should before this line---------NOTICE//
-
-    shaderList.push_back(shader);
+    shaderList.push_back(std::move(renderShader));
+    shaderList.push_back(std::move(shadowShader));
 
     
     //-------Create Light components--------//
     //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
     glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f); //-glm::sqrt(2.0f) / 2.0f
-    Light lightsource = Light(1.0f, 1.0f, 1.0f, 0.2f, 0.6f);
+    Light lightsource = Light(1.0f, 1.0f, 1.0f, 0.6f, 3.0f);
     //create the light object
     DirectionalLight mainLight(lightsource, lightDirection);
 
+    //compute the light space matrix
+    mainLight.CreateShadowMap(1024, 1024,0.1,100);
+
     //create point light
-    pointLight[0] = PointLight(0.0f, 0.0f, 1.0f, 
+    pointLight.push_back(std::make_unique<PointLight>(0.0f, 0.0f, 1.0f, 
                                0.1f, 1.0f, 
                                2.0f, 2.0f, -2.0f, 
-                               0.3f, 0.2f, 0.1f);
-    pointLight[1] = PointLight(1.0f, 0.0f, 0.0f,
+                               0.3f, 0.2f, 0.1f));
+    pointLight.push_back(std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
                                0.6f, 1.0f,
 							   0.0f, 0.0f, -2.0f,
-							   0.3f, 0.2f, 0.1f);
-    unsigned int pointLightCount = 2;
+							   0.3f, 0.2f, 0.1f));
+    unsigned int pointLightCount = pointLight.size();
 
     //create spot light
-    spotLight[0] = SpotLight(1.0f, 1.0f, 1.0f,
+    spotLight.push_back(std::make_unique<SpotLight>(1.0f, 1.0f, 1.0f,
         					0.1f, 4.0f,
         					0.0f, 0.0f, -1.5f,
         					glm::vec3(0.0f,0.0f,-1.0f),
         					0.4f, 0.3f, 0.2f,
-        					5.0f, 30.0f);
-    spotLight[1] = SpotLight(1.0f, 1.0f, 0.0f,
-        					0.1f, 2.0f,
-        					0.0f, 3.0f, -2.5f,
-        					glm::vec3(0.0f,-1.0f,0.0f),
-        					1.0f, 0.0f, 0.0f,
-        					20.0f, 30.f);
-    unsigned int spotLightCount = 2;
+        					5.0f, 30.0f));
+    spotLight.push_back(std::make_unique<SpotLight>(1.0f, 1.0f, 0.0f,
+        0.1f, 2.0f,
+        0.0f, 3.0f, -2.5f,
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        1.0f, 0.0f, 0.0f,
+        20.0f, 30.f));
+    unsigned int spotLightCount = spotLight.size();
     //-------End Light creation --------//
 
     glEnable(GL_DEPTH_TEST); //enable depth testing
@@ -225,74 +243,21 @@ int main()
     //initialize the camera object
     Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0, 1.0f, 0.0f), 90.0f, 0.0f, 0.5f, 0.01f);
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth / (GLfloat)bufferHeight, 0.1f, 100.0f); //create the projection matrix
-    ProjectionLocation = shaderList[0].GetProjectionLocation();
-    MoveLocation = shaderList[0].GetModelLocation();
-    ViewLocation = shaderList[0].GetViewLocation();
-    ambientColorLoc = shaderList[0].GetAmbientColorLocation();
-    ambientIntensityLoc = shaderList[0].GetAmbientIntensityLocation();
-    diffuseIntensityLoc = shaderList[0].GetDiffuseIntensityLocation();
-    LightDirectionLoc = shaderList[0].GetDirectionLocation();
-    matSpeculInt = shaderList[0].GetSpecularIntensityLocation();
-    matSpeculShin = shaderList[0].GetSpecularShininessLocation();
 
     double lastTime = glfwGetTime();
     double accuTime = glfwGetTime();
-    //loop until window closed
-    while (!mainWindow.getShouldClose())
-    {
-        double currentTime = glfwGetTime();
-        camera.KeyControl(mainWindow.getKeys(), currentTime - lastTime);
-        camera.MouseControl(mainWindow.getXChange(), mainWindow.getYChange());
-
-        lastTime = currentTime;
-        //get + handle user input events(keyboard, mouse, etc.)
-        glfwPollEvents();
-        //clear window
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //red
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear the color buffer only
-        /*if (direction) {
-            triOffset += triIncrement;
-        }
-        else
-        {
-            triOffset -= triIncrement;
-        }
-
-        if (triOffset >= triMaxOffset || triOffset <= -triMaxOffset)
-        {
-            direction = !direction;
-        }*/
-        
-        shaderList[0].UseShader(); //use the shader program
-        
+    //local function to render the scene
+    auto renderer = [&](Shader& shader){
         glm::mat4 model(1.0f); //create the model matrix with identity matrix
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -2.5f)); //move the model front around 2.5meters
         model = glm::rotate(model, triOffset, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
-        
-        glm::mat4 viewMat = camera.GetViewMatrix();
-        
-        //model = glm::translate(model,glm::vec3(triOffset, triOffset, 0.0f)); //translate the model matrix   
-
         //set the uniform geometric transformation variable value
         glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(ProjectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(ViewLocation, 1, GL_FALSE, glm::value_ptr(viewMat));
-        //assign camera position to the shader
-        glUniform3f(shaderList[0].GetCameraPosition(), camera.GetCameraPosition().x, camera.GetCameraPosition().y,camera.GetCameraPosition().z);
-        
-        //Set up TExture
-        brickTexture.UseTexture();
-
-        //Set up the light conditions
-        mainLight.UseLight(ambientIntensityLoc, ambientColorLoc,diffuseIntensityLoc, LightDirectionLoc);
-        shaderList[0].SetPointLights(pointLight,pointLightCount);
-        //update the spot light pose to align with the camera before set the spotlights
-        spotLight[0].SetPose(camera.GetCameraPosition()+glm::vec3(0.0f,-0.5f,0.0f), camera.GetFrontDirection());
-        shaderList[0].SetSpotLights(spotLight, spotLightCount);
-
         //set up material and render the two pyramids
         shinyMaterial.UseMaterial(matSpeculInt, matSpeculShin);
+        //Set up Texture
+        brickTexture.UseTexture();
         meshList[0].RenderMesh(); //render the mesh
 
         dirtTexture.UseTexture();
@@ -310,15 +275,82 @@ int main()
         //set up the ground object
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
         glUniformMatrix4fv(MoveLocation, 1, GL_FALSE, glm::value_ptr(model));
         dullMaterial.UseMaterial(matSpeculInt, matSpeculShin);
-        modelData.RenderModel(shaderList[0]);
+        modelData.RenderModel(shader);
+    };
+    //loop until window closed
+    while (!mainWindow.getShouldClose())
+    {
+        double currentTime = glfwGetTime();
+        camera.KeyControl(mainWindow.getKeys(), currentTime - lastTime);
+        camera.MouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+
+        lastTime = currentTime;
+        //get + handle user input events(keyboard, mouse, etc.)
+        glfwPollEvents();
+        /// ----- Clear the window and clear depth buffer ----- ///
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //red
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        /*if (direction) {
+            triOffset += triIncrement;
+        }
+        else
+        {
+            triOffset -= triIncrement;
+        }
+
+        if (triOffset >= triMaxOffset || triOffset <= -triMaxOffset)
+        {
+            direction = !direction;
+        }*/
+
+        /// ----- Draw the model ----- ///
+        //shadowMap pass
+        shaderList[1]->UseShader();
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, mainLight.ShadowMapWidth(), mainLight.ShadowMapHeight());
+        mainLight.WriteShadowMap();
+        //Get model location
+        MoveLocation = shaderList[1]->GetModelLocation();
+        auto lightTransform  =*mainLight.GetLightTransform();
+        shaderList[1]->SetDirectionalLightTransform(&lightTransform);
+        renderer(*shaderList[1]);
+        mainLight.FinishShadowMap();
+        
+
+        /// ---- Rendering pass ---- ///
+        shaderList[0]->UseShader();
+        glViewport(0, 0, bufferWidth, bufferHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        MoveLocation = shaderList[0]->GetModelLocation();
+
+        mainLight.GetShadowMap()->BindShadowMapTexture(3); //bind the shadow map to texture unit 3
+        shaderList[0]->SetUniformDirectionalShadowMap("shadowMap", 3); //bind the shader's uniform shadow map sampler2D to texture unit 1
+        glm::mat4 viewMat = camera.GetViewMatrix();
+        //reset the model location
+        
+        shaderList[0]->SetDirectionalLightTransform(&lightTransform);
+        glUniformMatrix4fv(ProjectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(ViewLocation, 1, GL_FALSE, glm::value_ptr(viewMat));
+        //assign camera position to the shader
+        glUniform3f(shaderList[0]->GetCameraPosition(), camera.GetCameraPosition().x, camera.GetCameraPosition().y, camera.GetCameraPosition().z);
+
+        //Set up the light conditions
+        mainLight.UseLight(ambientIntensityLoc, ambientColorLoc, diffuseIntensityLoc, LightDirectionLoc);
+        shaderList[0]->SetPointLights(pointLight, pointLightCount);
+        //update the spot light pose to align with the camera before set the spotlights
+        spotLight[0]->SetPose(camera.GetCameraPosition() + glm::vec3(0.0f, -0.5f, 0.0f), camera.GetFrontDirection());
+        shaderList[0]->SetSpotLights(spotLight, spotLightCount);
+
+
+        /// ---- set the geometry, view and global transformation matrix ---- ///
+        renderer(*shaderList[0]);
 
         glUseProgram(0); //unbind the shader program
 
         mainWindow.swapBuffers();//swap the buffers, double buffering
-        glfwPollEvents();
 
     }
     glfwTerminate(); //terminate GLFW

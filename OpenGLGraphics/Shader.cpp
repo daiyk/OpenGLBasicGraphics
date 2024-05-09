@@ -17,13 +17,13 @@ GLuint Shader::GetShaderLocation()
 	return shaderProgram;
 }
 
-void Shader::SetPointLights(PointLight* _pointLights, unsigned int _lightCount)
+void Shader::SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount)
 {
 	assert(("Light count cannot exceeded the MACRO NUM_POINT_LIGHT!", _lightCount <= NUM_POINT_LIGHTS));
 	glUniform1i(pointLightsCountLoc, _lightCount);
 	for (int i = 0; i < _lightCount; i++)
 	{
-		_pointLights[i].UseLight(
+		_pointLights[i]->UseLight(
 			this->pointLights[i].baseLight.uniformAmbientIntensity, 
 			this->pointLights[i].baseLight.uniformColor, 
 			this->pointLights[i].baseLight.uniformDiffuseIntensity, 
@@ -34,14 +34,14 @@ void Shader::SetPointLights(PointLight* _pointLights, unsigned int _lightCount)
 		);
 	}
 }
-void Shader::SetSpotLights(SpotLight* _spotLights, unsigned int _lightCount)
+void Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount)
 {
 	assert(("Light count cannot exceeded the MACRO NUM_SPOT_LIGHT!",_lightCount <= NUM_SPOT_LIGHTS));
 	
 	glUniform1i(spotLightsCountLoc, _lightCount);
 	for (int i = 0; i < _lightCount; i++)
 	{
-		_spotLights[i].UseLight(
+		_spotLights[i]->UseLight(
 			this->spotLights[i].basePointLight.baseLight.uniformAmbientIntensity, 
 			this->spotLights[i].basePointLight.baseLight.uniformColor, 
 			this->spotLights[i].basePointLight.baseLight.uniformDiffuseIntensity, 
@@ -54,8 +54,15 @@ void Shader::SetSpotLights(SpotLight* _spotLights, unsigned int _lightCount)
 			this->spotLights[i].uniformOuterEdge);
 	}
 }
-void Shader::AssignUniformLocWithName(const char* uniformName, GLuint* uniformLocation) {
-	*uniformLocation = glGetUniformLocation(shaderProgram, uniformName);
+void Shader::SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit)
+{
+	//bind the texture unit to the shader sampler
+	glUniform1i(uniformShaderMap, textureUnit);
+}
+
+void Shader::SetDirectionalLightTransform(const glm::mat4* _lightTransform)
+{
+	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(*_lightTransform));
 }
 
 void Shader::AssignUniformDiffuseIntensityLoc(const char* uniformName) {
@@ -98,6 +105,10 @@ void Shader::AssignUniformMatSpecularShinLoc(const char* uniformName) {
 	uniformMatSpecularShinLoc = glGetUniformLocation(shaderProgram, uniformName);
 }
 
+GLuint Shader::GetUniformLocation(const char* uniformName)
+{
+	return glGetUniformLocation(shaderProgram, uniformName);
+}
 void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 	shaderProgram = glCreateProgram(); //create the shader program
 	if (!shaderProgram)
@@ -190,6 +201,12 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 	}
 	spotLightsCountLoc = glGetUniformLocation(shaderProgram, "spotLightCount");
 	///---- end of setting up lights components' uniform locations ----///
+	/// --- set up shadow map uniform locations --- ///
+	//this part is for directional light shadow mapping, we may change it later to be more general
+	uniformShaderMap = GetUniformLocation("shadowMap");
+	uniformDirectionalLightTransform = GetUniformLocation("lightSpaceTransform");
+
+	/// --- End set up shadow map uniform locations --- ///
 }
 
 void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation) {
