@@ -15,7 +15,7 @@ class Light
 		Light(); 
 		Light(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLfloat diffuseIntensity);
 		Light(Light& light);
-		virtual void CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane);
+		virtual bool CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane);
 		void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseStrength);
 		GLuint ShadowMapWidth() { return shadowMapWidth; }
 		GLuint ShadowMapHeight() { return shadowMapHeight; }

@@ -4,11 +4,13 @@ ShadowMap::ShadowMap()
 {
 	m_fbo = 0;
 	m_shadowMap = 0;
+	m_aspect = 1.0f;
 }
 
-void ShadowMap::Init(GLuint width, GLuint height) {
+bool ShadowMap::Init(GLuint width, GLuint height) {
 	glGenFramebuffers(1, &m_fbo);
 
+	m_aspect = (GLfloat)width / (GLfloat)height;
 	/// ---- in the following we only create the texture, but we don't bind it to any texture unit ---- ///
 	glGenTextures(1, &m_shadowMap);
 	glBindTexture(GL_TEXTURE_2D, m_shadowMap);
@@ -29,8 +31,10 @@ void ShadowMap::Init(GLuint width, GLuint height) {
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
 		printf("Error creating shadow map framebuffer\n");
+		return false;
 	}
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return true;
 }
 
 /// <summary>

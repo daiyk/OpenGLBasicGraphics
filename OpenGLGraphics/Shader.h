@@ -97,6 +97,7 @@ private:
 	GLuint cameraPosition, shaderProgram = 0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,
 		uniformMatSpecularShinLoc;
 	GLuint pointLightsCountLoc, spotLightsCountLoc; //light components
+	GLuint lightTransforms[6];
 	void CompileShader(const char* vertexCode, const char* fragmentCode);
 	void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType);
 };

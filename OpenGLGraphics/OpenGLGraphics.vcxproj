@@ -140,6 +140,7 @@
     <ClCompile Include="Materials.cpp" />
     <ClCompile Include="MeshData.cpp" />
     <ClCompile Include="ModelData.cpp" />
+    <ClCompile Include="OmniShadowMap.cpp" />
     <ClCompile Include="OpenGLGraphics.cpp" />
     <ClCompile Include="PCHTypes.cpp" />
     <ClCompile Include="PointLight.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Materials.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="ModelData.h" />
+    <ClInclude Include="OmniShadowMap.h" />
     <ClInclude Include="PCHTypes.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="resource.h" />

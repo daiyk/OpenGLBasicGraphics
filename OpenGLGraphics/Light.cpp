@@ -22,14 +22,15 @@ Light::Light(Light& light)
 	farPlane = light.farPlane;
 }
 
-void Light::CreateShadowMap(GLuint width, GLuint height,GLfloat nearPlane, GLfloat farPlane)
+bool Light::CreateShadowMap(GLuint width, GLuint height,GLfloat nearPlane, GLfloat farPlane)
 {
 	shadowMapWidth = width;
 	shadowMapHeight = height;
 	this->nearPlane = nearPlane;
 	this->farPlane = farPlane;
 	shadowMap = std::make_unique<ShadowMap>();
-	shadowMap->Init(shadowMapWidth, shadowMapHeight);
+	return shadowMap->Init(shadowMapWidth, shadowMapHeight);
+	
 }
 
 //constructor with parameters

@@ -18,7 +18,7 @@ class DirectionalLight :
 			glUniform3f(directionLocation, direction.x, direction.y, direction.z);
 		};
 		ShadowMap* GetShadowMap() { return shadowMap.get(); }
-		void CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane) override;
+		bool CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane) override;
 		void WriteShadowMap() { shadowMap->WriteShadowMap(); }
 		void FinishShadowMap(){ shadowMap->FinishWriteShadowMap(); }
 		const glm::mat4 *GetLightTransform() { return &lightTransform; }
