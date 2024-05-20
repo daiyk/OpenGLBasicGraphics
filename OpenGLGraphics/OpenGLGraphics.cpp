@@ -141,6 +141,9 @@ int main()
     const char* fShader = "Shaders/firstShader.frag";
     const char* shadowMapVShader = "Shaders/ShadowMap_Vertex.vert";
     const char* shadowMapFShader = "Shaders/ShadowMap_Fragment.frag";
+	const char* omniShadowMapVShader = "Shaders/Omni_ShadowMap_Vertex.vert";
+	const char* omniShadowMapFShader = "Shaders/Omni_ShadowMap_Fragment.frag";
+	const char* omniShadowMapGShader = "Shaders/Omni_ShadowMap_Geometry.gem";
     Window mainWindow = Window(WIDTH, HEIGHT);
     mainWindow.Initialise();
 
@@ -184,31 +187,50 @@ int main()
     std::unique_ptr<Shader> shadowShader = std::make_unique<Shader>();;
     shadowShader->CreateFromFiles(shadowMapVShader, shadowMapFShader);
     shadowShader->AssignUniformModelLoc("model");
-    
+
+	///-----Create OmniShadowMap shader ---///
+	std::unique_ptr<Shader> omniShadowShader = std::make_unique<Shader>();
+	omniShadowShader->CreateFromFiles(omniShadowMapVShader, omniShadowMapGShader, omniShadowMapFShader);
+	omniShadowShader->AssignUniformModelLoc("model");
+
     //NOTICE---------FinalStep other shader settings should before this line---------NOTICE//
     shaderList.push_back(std::move(renderShader));
     shaderList.push_back(std::move(shadowShader));
+	shaderList.push_back(std::move(omniShadowShader));
 
     
     //-------Create Light components--------//
     //light direction vec, 45 degree angle downwards, the direction is from light source to the object, need to be reversed in the shader
     glm::vec3 lightDirection = glm::vec3(0.0f, -glm::sqrt(2.0f) / 2.0f, -glm::sqrt(2.0f) / 2.0f); //-glm::sqrt(2.0f) / 2.0f
-    Light lightsource = Light(1.0f, 1.0f, 1.0f, 0.6f, 3.0f);
+    Light lightsource = Light(1.0f, 1.0f, 1.0f, 0.3f, 1.0f);
     //create the light object
     DirectionalLight mainLight(lightsource, lightDirection);
 
     //compute the light space matrix
-    mainLight.CreateShadowMap(1024, 1024,0.1,100);
+    mainLight.CreateShadowMap(2048, 2048,0.1,100);
 
+
+    auto pl1 = std::make_unique<PointLight>(0.0f, 0.0f, 1.0f,
+        0.1f, 1.0f,
+        2.0f, 2.0f, -2.0f,
+        0.3f, 0.2f, 0.1f);
+	pl1->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
+    auto pl2 = std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
+        0.6f, 1.0f,
+        0.0f, 0.0f, -2.0f,
+        0.3f, 0.2f, 0.1f);
+	pl2->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
+	pointLight.push_back(std::move(pl1));
+	pointLight.push_back(std::move(pl2));
     //create point light
-    pointLight.push_back(std::make_unique<PointLight>(0.0f, 0.0f, 1.0f, 
+    /*pointLight.push_back(std::make_unique<PointLight>(0.0f, 0.0f, 1.0f, 
                                0.1f, 1.0f, 
                                2.0f, 2.0f, -2.0f, 
                                0.3f, 0.2f, 0.1f));
     pointLight.push_back(std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
                                0.6f, 1.0f,
 							   0.0f, 0.0f, -2.0f,
-							   0.3f, 0.2f, 0.1f));
+							   0.3f, 0.2f, 0.1f));*/
     unsigned int pointLightCount = pointLight.size();
 
     //create spot light
@@ -307,11 +329,13 @@ int main()
         }*/
 
         /// ----- Draw the model ----- ///
-        //shadowMap pass
+        //shadowMap pass for directional Light
         shaderList[1]->UseShader();
-        glClear(GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, mainLight.ShadowMapWidth(), mainLight.ShadowMapHeight());
+        
         mainLight.WriteShadowMap();
+        glClear(GL_DEPTH_BUFFER_BIT);
+
         //Get model location
         MoveLocation = shaderList[1]->GetModelLocation();
         auto lightTransform  =*mainLight.GetLightTransform();
@@ -319,6 +343,19 @@ int main()
         renderer(*shaderList[1]);
         mainLight.FinishShadowMap();
         
+		//OmniShadowMap pass for point light
+        for (int i = 0; i < pointLight.size(); i++) {
+            shaderList[2]->UseShader();
+            glClear(GL_DEPTH_BUFFER_BIT);
+			glViewport(0, 0, pointLight[i]->ShadowMapWidth(), pointLight[i]->ShadowMapHeight());
+			pointLight[i]->GetShadowMap()->WriteShadowMap();
+			MoveLocation = shaderList[2]->GetModelLocation();
+			shaderList[2]->SetUniformOmniLightPos(pointLight[i]->GetPosition());
+			shaderList[2]->SetOmniLightMatrices((*pointLight[i]->GetLightTransforms()).data(), (*pointLight[i]->GetLightTransforms()).size());
+            shaderList[2]->SetFarPlane(pointLight[i]->GetFarPlane());
+            renderer(*shaderList[2]);
+			pointLight[i]->GetShadowMap()->FinishWriteShadowMap();
+        }
 
         /// ---- Rendering pass ---- ///
         shaderList[0]->UseShader();

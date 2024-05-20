@@ -27,6 +27,7 @@ struct PointLight
     BaseLight base;
 	vec3 position;
 	float constant, linear, exponent;
+	float farPlane;
 };
 
 struct SpotLight
@@ -161,5 +162,5 @@ void main()
     vec4 directionColor = CalDirectionalLight();
     vec4 pointColor = CalTotalPointLight();
     vec4 spotLight = CalTotalSpotLight();
-    colour = texture(texture_diffuse0, vTex) * (directionColor);
+    colour = texture(texture_diffuse0, vTex) * (directionColor+pointColor+spotLight);
 }

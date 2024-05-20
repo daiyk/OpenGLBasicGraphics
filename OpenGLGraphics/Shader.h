@@ -19,6 +19,8 @@ public:
 	~Shader();
 	void CreateFromString(const char* vertexCode, const char* fragmentCode);
 	void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation);
+	//three shaders pipeline version
+	void CreateFromFiles(const char* vertexLocation, const char* geometryLocation, const char* fragmentLocation);
 	GLuint GetCameraPosition();
 	GLuint GetProjectionLocation();
 	GLuint GetModelLocation();
@@ -33,6 +35,9 @@ public:
 	GLuint* GetSpotLightCountLocation();
 	GLuint GetShaderLocation();
 
+	/// <summary>
+	///  partial assignmentr of the uniform variables location are through the AssignUniform... functions, and the rest are through the GetUniform... functions which are inside CompileVertFrag function
+	/// </summary>
 	void AssignUniformCameraPosition(const char* uniformName);
 	void AssignUniformDiffuseIntensityLoc(const char* uniformName);
 	void AssignUniformDirectionLoc(const char* uniformName);
@@ -49,11 +54,16 @@ public:
 
 	void SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount);
 	void SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount);
+	/// ----- shadow map components ----- ///
 	void SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit);
-
 	void SetDirectionalLightTransform(const glm::mat4* _lightTransform);
+	void SetUniformOmniLightPos(const glm::vec3 _lightPos);
+	void SetOmniLightMatrices(const glm::mat4* _lightMatrices, GLuint _lightMatricesSize);
+	void SetFarPlane(float _farPlane);
+
 	void UseShader();
 	void ClearShader();
+	void Validate();
 	/// <summary>
 	/// basic light components
 	/// </summary>
@@ -80,6 +90,7 @@ public:
 		GLuint uniformConstant;
 		GLuint uniformLinear;
 		GLuint uniformExponent;
+		GLuint uniformFarPlane;
 	} pointLights[NUM_POINT_LIGHTS];
 	/// <summary>
 	/// maximum spot lights number is defined in light.h
@@ -91,14 +102,22 @@ public:
 		GLuint uniformOuterEdge;
 	} spotLights[NUM_SPOT_LIGHTS];
 
-	GLuint uniformDirectionalLightTransform;
-	GLuint uniformShaderMap;
+	
 private:
 	GLuint cameraPosition, shaderProgram = 0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,
 		uniformMatSpecularShinLoc;
 	GLuint pointLightsCountLoc, spotLightsCountLoc; //light components
-	GLuint lightTransforms[6];
-	void CompileShader(const char* vertexCode, const char* fragmentCode);
+	/// ----- shadow map components ----- ///
+	GLuint uniformDirectionalLightTransform;
+	GLuint uniformShaderMap;
+	/// ----- omini-shadow map components ----- ///
+	GLuint uniformOmniLightPos, uniformFarPlane;
+	GLuint uniformOmnilightTransforms[6];  
+	void CompileVertFrag(const char* vertexCode, const char* fragmentCode);
+	void CompileVertFragGeom(const char* vertexCode, const char* geometryCode, const char* fragmentCode);
+
+	void CompileShader();
 	void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType);
+	void InitShaderUniformVariables();
 };
 

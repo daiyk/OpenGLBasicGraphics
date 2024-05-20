@@ -33,7 +33,7 @@ bool PointLight::CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane,
 	this->farPlane = farPlane;
 	shadowMap = std::make_unique<OmniShadowMap>();
 	//use pointer to initialize the unique_ptr obj
-	if (!shadowMap->Init(nearPlane, farPlane)) {
+	if (!shadowMap->Init(width, height)) {
 		return false;
 	}
 	//compute projection matrix

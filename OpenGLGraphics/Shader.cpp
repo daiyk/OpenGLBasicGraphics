@@ -10,7 +10,40 @@ Shader::Shader()
 }
 void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode)
 {
-	CompileShader(vertexCode, fragmentCode);
+	CompileVertFrag(vertexCode, fragmentCode);
+}
+void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation) {
+	std::string vertexString = ReadFile(vertexLocation);
+	std::string fragmentString = ReadFile(fragmentLocation);
+	const char* vertexCode = vertexString.c_str();
+	const char* fragmentCode = fragmentString.c_str();
+	CompileVertFrag(vertexCode, fragmentCode);
+}
+std::string Shader::ReadFile(const char* fileLocation) {
+	std::string content;
+	std::ifstream fileStream(fileLocation, std::ios::in);
+	if (!fileStream.is_open()) {
+		printf("Failed to read %s! File doesn't exist.", fileLocation);
+		return "";
+	}
+	std::string line = "";
+	while (!fileStream.eof()) {
+		std::getline(fileStream, line);
+		content.append(line + "\n");
+	}
+	fileStream.close();
+	return content;
+}
+
+void Shader::CreateFromFiles(const char* vertexLocation, const char* geometryLocation, const char* fragmentLocation)
+{
+	std::string vertexString = ReadFile(vertexLocation);
+	std::string geometryString = ReadFile(geometryLocation);
+	std::string fragmentString = ReadFile(fragmentLocation);
+	const char* vertexCode = vertexString.c_str();
+	const char* fragmentCode = fragmentString.c_str();
+	const char* geometryCode = geometryString.c_str();
+	CompileVertFragGeom(vertexCode, geometryCode, fragmentCode);
 }
 GLuint Shader::GetShaderLocation()
 {
@@ -65,6 +98,19 @@ void Shader::SetDirectionalLightTransform(const glm::mat4* _lightTransform)
 	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(*_lightTransform));
 }
 
+void Shader::SetUniformOmniLightPos(const glm::vec3 _lightPos) {
+	glUniform3fv(uniformOmniLightPos, 1, glm::value_ptr(_lightPos));
+}
+void Shader::SetOmniLightMatrices(const glm::mat4* _lightMatrices, GLuint _lightMatricesSize)
+{
+	for (int i = 0; i < _lightMatricesSize; i++) {
+		glUniformMatrix4fv(uniformOmnilightTransforms[i], 1, GL_FALSE, glm::value_ptr(_lightMatrices[i]));
+	}
+}
+
+void Shader::SetFarPlane(float _farPlane) {
+	glUniform1f(uniformFarPlane, _farPlane);
+}
 void Shader::AssignUniformDiffuseIntensityLoc(const char* uniformName) {
 	baseLight.uniformDiffuseIntensity = glGetUniformLocation(shaderProgram, uniformName);
 }
@@ -109,7 +155,11 @@ GLuint Shader::GetUniformLocation(const char* uniformName)
 {
 	return glGetUniformLocation(shaderProgram, uniformName);
 }
-void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
+void Shader::CompileVertFrag(const char* vertexCode, const char* fragmentCode) {
+	if (shaderProgram) {
+		printf("Shader has been created!");
+		return;
+	}
 	shaderProgram = glCreateProgram(); //create the shader program
 	if (!shaderProgram)
 	{
@@ -120,6 +170,30 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 	AddShader(shaderProgram, vertexCode, GL_VERTEX_SHADER); //add the vertex shader to the shader program
 	AddShader(shaderProgram, fragmentCode, GL_FRAGMENT_SHADER); //add the fragment shader to the shader program
 
+	CompileShader(); //compile the shader program
+}
+
+void Shader::CompileVertFragGeom(const char* vertexCode, const char* geometryCode, const char* fragmentCode) {
+	if (shaderProgram) {
+		printf("Shader has been created!");
+		return;
+	}
+	shaderProgram = glCreateProgram(); //create the shader program
+	if (!shaderProgram)
+	{
+		printf("Error creating shader program!");
+		return;
+	}
+
+	AddShader(shaderProgram, vertexCode, GL_VERTEX_SHADER); //add the vertex shader to the shader program
+	AddShader(shaderProgram, fragmentCode, GL_FRAGMENT_SHADER); //add the fragment shader to the shader program
+	AddShader(shaderProgram, geometryCode, GL_GEOMETRY_SHADER); //add the geometry shader to the shader program
+
+	CompileShader(); //compile the shader program
+}
+
+//code reuse for compile shader program
+void Shader::CompileShader() {
 	glLinkProgram(shaderProgram); //link the shader program
 	GLint success = 0;
 	//get the link status after linking the shader program
@@ -142,6 +216,11 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 		return;
 	}
 
+	//initialize the uniform variables
+	InitShaderUniformVariables();
+}
+
+void Shader::InitShaderUniformVariables() {
 	///-----Set up Lights components' uniform locations ----///
 	//pointlights
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
@@ -166,6 +245,8 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 		snprintf(locBuff, sizeof(locBuff), "pointLights[%d].exponent", i);
 		locStr = locBuff;
 		pointLights[i].uniformExponent = glGetUniformLocation(shaderProgram, locStr.c_str());
+		snprintf(locBuff, sizeof(locBuff), "pointLights[%d].farPlane", i);
+		pointLights[i].uniformFarPlane = glGetUniformLocation(shaderProgram, locStr.c_str());
 	}
 	pointLightsCountLoc = glGetUniformLocation(shaderProgram, "pointLightCount");
 
@@ -202,34 +283,22 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 	spotLightsCountLoc = glGetUniformLocation(shaderProgram, "spotLightCount");
 	///---- end of setting up lights components' uniform locations ----///
 	/// --- set up shadow map uniform locations --- ///
+
 	//this part is for directional light shadow mapping, we may change it later to be more general
 	uniformShaderMap = GetUniformLocation("shadowMap");
 	uniformDirectionalLightTransform = GetUniformLocation("lightSpaceTransform");
 
-	/// --- End set up shadow map uniform locations --- ///
-}
+	//this part is for omni light shadow mapping ONLY, we may change it later to be more general
+	uniformOmniLightPos = GetUniformLocation("lightPos");
+	uniformFarPlane = GetUniformLocation("farPlane");
 
-void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation) {
-	std::string vertexString = ReadFile(vertexLocation);
-	std::string fragmentString = ReadFile(fragmentLocation);
-	const char* vertexCode = vertexString.c_str();
-	const char* fragmentCode = fragmentString.c_str();
-	CompileShader(vertexCode, fragmentCode);
-}
-std::string Shader::ReadFile(const char* fileLocation) {
-	std::string content;
-	std::ifstream fileStream(fileLocation, std::ios::in);
-	if (!fileStream.is_open()) {
-		printf("Failed to read %s! File doesn't exist.", fileLocation);
-		return "";
+	//bind omnilight transform array
+	for (int i = 0; i < sizeof(uniformOmnilightTransforms) / sizeof(*uniformOmnilightTransforms); i++) {
+		char locBuff[100] = { '\0' };
+		snprintf(locBuff, sizeof(locBuff), "OmnilightSpaceMatrix[%d]", i);
+		uniformOmnilightTransforms[i] = glGetUniformLocation(shaderProgram, locBuff);
 	}
-	std::string line = "";
-	while (!fileStream.eof()) {
-		std::getline(fileStream, line);
-		content.append(line + "\n");
-	}
-	fileStream.close();
-	return content;
+	/// --- End set up shadow map uniform locations --- ///
 }
 
 void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType) {
@@ -251,6 +320,23 @@ void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderT
 	}
 	glAttachShader(theProgram, theShader); //attach the shader to the program
 }
+
+void Shader::Validate()
+{
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glValidateProgram(shaderProgram);
+	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &result);
+	if (!result)
+	{
+		glGetProgramInfoLog(shaderProgram, sizeof(eLog), NULL, eLog);
+		printf("Error validating program: '%s'\n", eLog);
+		return;
+	}
+}
+
+
 GLuint Shader::GetCameraPosition() {
 	return cameraPosition;
 }
