@@ -126,6 +126,7 @@ void ModelData::RenderModel(Shader &shader) {
 		///------- bind the sampler with the texture unit ---- ///
 		int diffuseNr = 0;
 		int specularNr = 0;
+		//only if it exists multiple texture types
 		for (size_t j = 0; j < material.textureIndices.size(); j++) {
 			_textures[material.textureIndices[j]]-> UseTexture(j);
 			if (_textures[material.textureIndices[j]]->GetTextureType() == aiTextureType_DIFFUSE) {

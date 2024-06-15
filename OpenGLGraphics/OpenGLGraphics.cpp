@@ -329,8 +329,9 @@ int main()
         }*/
 
         /// ----- Draw the model ----- ///
-        //shadowMap pass for directional Light
+        /// ---- shadowMap pass for directional Light ---- ///
         shaderList[1]->UseShader();
+        shaderList[1]->Validate();
         glViewport(0, 0, mainLight.ShadowMapWidth(), mainLight.ShadowMapHeight());
         
         mainLight.WriteShadowMap();
@@ -343,7 +344,7 @@ int main()
         renderer(*shaderList[1]);
         mainLight.FinishShadowMap();
         
-		//OmniShadowMap pass for point light
+		/// --- OmniShadowMap pass building for point light --- ///
         for (int i = 0; i < pointLight.size(); i++) {
             shaderList[2]->UseShader();
             glClear(GL_DEPTH_BUFFER_BIT);
@@ -362,12 +363,14 @@ int main()
         glViewport(0, 0, bufferWidth, bufferHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MoveLocation = shaderList[0]->GetModelLocation();
-
-        mainLight.GetShadowMap()->BindShadowMapTexture(3); //bind the shadow map to texture unit 3
-        shaderList[0]->SetUniformDirectionalShadowMap("shadowMap", 3); //bind the shader's uniform shadow map sampler2D to texture unit 1
+        //unit start used for shadwMap texture
+        int textureStartUnit = 3;
+        mainLight.GetShadowMap()->BindShadowMapTexture(textureStartUnit); //bind the directionalLight shadow map to texture unit 3
+        shaderList[0]->SetUniformDirectionalShadowMap("shadowMap", textureStartUnit); //bind the shader's uniform shadow map sampler2D to texture unit 1
+        textureStartUnit++;
         glm::mat4 viewMat = camera.GetViewMatrix();
+        //set the 
         //reset the model location
-        
         shaderList[0]->SetDirectionalLightTransform(&lightTransform);
         glUniformMatrix4fv(ProjectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(ViewLocation, 1, GL_FALSE, glm::value_ptr(viewMat));
@@ -376,7 +379,8 @@ int main()
 
         //Set up the light conditions
         mainLight.UseLight(ambientIntensityLoc, ambientColorLoc, diffuseIntensityLoc, LightDirectionLoc);
-        shaderList[0]->SetPointLights(pointLight, pointLightCount);
+        textureStartUnit = shaderList[0]->SetPointLights(pointLight, pointLightCount,textureStartUnit) + 1;
+        
         //update the spot light pose to align with the camera before set the spotlights
         spotLight[0]->SetPose(camera.GetCameraPosition() + glm::vec3(0.0f, -0.5f, 0.0f), camera.GetFrontDirection());
         shaderList[0]->SetSpotLights(spotLight, spotLightCount);

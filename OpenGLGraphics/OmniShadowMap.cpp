@@ -52,11 +52,12 @@ void OmniShadowMap::WriteShadowMap()
 }
 
 /// <summary>
-/// bind the shadow map to the texture unit
+/// bind the shadow map to the texture unit and return the latest texture unit index
 /// </summary>
 /// <param name="textureUnit"></param>
-void OmniShadowMap::BindShadowMapTexture(int textureLayer)
+int OmniShadowMap::BindShadowMapTexture(int textureLayer)
 {
 	glActiveTexture(GL_TEXTURE0+textureLayer);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_shadowMap);
+	return textureLayer;
 }

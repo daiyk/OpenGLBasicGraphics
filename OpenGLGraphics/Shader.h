@@ -21,6 +21,7 @@ public:
 	void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation);
 	//three shaders pipeline version
 	void CreateFromFiles(const char* vertexLocation, const char* geometryLocation, const char* fragmentLocation);
+
 	GLuint GetCameraPosition();
 	GLuint GetProjectionLocation();
 	GLuint GetModelLocation();
@@ -52,7 +53,7 @@ public:
 	std::string ReadFile(const char* fileLocation);
 
 
-	void SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount);
+	int SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount, unsigned int shadowMapStartUnit);
 	void SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount);
 	/// ----- shadow map components ----- ///
 	void SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit);
@@ -102,17 +103,25 @@ public:
 		GLuint uniformOuterEdge;
 	} spotLights[NUM_SPOT_LIGHTS];
 
-	
+	/// <summary>
+	/// for the omi-directional shadow map for each point light and spot light
+	/// </summary>
+	struct
+	{
+		GLuint uniformShadowMap;
+		GLuint uniformFarPlane;
+	} omniShadowMap[NUM_POINT_LIGHTS + NUM_SPOT_LIGHTS];;
+
 private:
 	GLuint cameraPosition, shaderProgram = 0, uniformProjectionLoc, uniformModelLoc, uniformViewLoc, uniformMatSpecularIntLoc,
 		uniformMatSpecularShinLoc;
 	GLuint pointLightsCountLoc, spotLightsCountLoc; //light components
-	/// ----- shadow map components ----- ///
+	/// ----- shadow map components during rendering ----- ///
 	GLuint uniformDirectionalLightTransform;
 	GLuint uniformShaderMap;
-	/// ----- omini-shadow map components ----- ///
-	GLuint uniformOmniLightPos, uniformFarPlane;
-	GLuint uniformOmnilightTransforms[6];  
+	/// ----- omini-shadow map components during building ----- ///
+	GLuint uniformOmniLightPosBuilding, uniformFarPlaneBuilding;
+	GLuint uniformOmnilightTransformsBuilding[6];  
 	void CompileVertFrag(const char* vertexCode, const char* fragmentCode);
 	void CompileVertFragGeom(const char* vertexCode, const char* geometryCode, const char* fragmentCode);
 

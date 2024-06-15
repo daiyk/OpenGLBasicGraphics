@@ -38,6 +38,12 @@ struct SpotLight
     float outerEdge;
 };
 
+struct OmniShadowMap
+{
+	sampleCube shadowMap;
+	float farPlane;
+}
+
 struct Material
 {
 	float shininess;
@@ -66,6 +72,8 @@ uniform sampler2D texture_specular2;
 //shadow map sampler
 uniform sampler2D shadowMap;
 
+//includes shadow map for point light and spot light, notice that spotlights has a offset of NUM_POINT_LIGHTS
+uniform OmniShadowMap omniShadowMap[NUM_POINT_LIGHTS+NUM_SPOT_LIGHTS];
 uniform vec3 cameraPosition;
 
 float CalculateShadowFactor()
@@ -116,14 +124,21 @@ vec4 CalDirectionalLight()
     //assume the directionLight is incident direction, thus need reverse the direction
 	return CalLightByDirection(directionalLight.base, -directionalLight.direction, directionalShadow);
 }
-vec4 CalPointLight(PointLight pointLight)
+vec4 CalPointLight(PointLight pointLight, int shadowIndex)
 {
     vec3 direction = fragPos - pointLight.position; //from light source to the fragment
     float distance = length(direction);
     direction = normalize(direction);
     float attenuation = pointLight.constant + pointLight.linear * distance + pointLight.exponent * distance * distance;
-    //reverse the light direction, now from the fragment to the light source
-    return vec4(CalLightByDirection(pointLight.base,-direction, 1.0f).xyz/attenuation, 1.0f); //TODO: remove it
+    //calculate the shadow factor
+	//TODO: add spotlight to this later
+	float shadowFactor = 1.0f;
+	if(shadowIndex < pointLightCount)
+	{
+		shadowFactor = CalculateOmniShadowFactor(pointLight, shadowIndex);
+	}
+	//reverse the light direction, now from the fragment to the light source
+    return vec4(CalLightByDirection(pointLight.base,-direction, 1.0f).xyz/attenuation, shadowFactor);
 }
 
 //compute single point light color
@@ -132,7 +147,7 @@ vec4 CalTotalPointLight()
     vec4 result = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     for(int i=0; i < pointLightCount; i++)
     {
-        result.xyz += CalPointLight(pointLights[i]).xyz;
+        result.xyz += CalPointLight(pointLights[i], i).xyz;
     }
 	return result;
 }
@@ -140,6 +155,7 @@ vec4 CalTotalPointLight()
 //write a spot light function
 vec4 CalTotalSpotLight()
 {
+//TODO: add shadow map for spot lights
 	vec4 result = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	for(int i=0; i < spotLightCount; i++)
 	{
@@ -148,13 +164,25 @@ vec4 CalTotalSpotLight()
 		float spotFactor = dot(direction, normalize(spotLights[i].direction));
 		if(spotFactor > spotLights[i].outerEdge) //cosine value: bigger value means smaller than the edge angle, spotlight direction is factor 1.0f
 		{
-			vec4 lightColor = CalPointLight(spotLights[i].pointLight);
+			vec4 lightColor = CalPointLight(spotLights[i].pointLight, i+pointLightCount);
             //softedge
             float softEdgeFactor = clamp((spotFactor - spotLights[i].outerEdge)/(spotLights[i].edge - spotLights[i].outerEdge), 0.0f, 1.0f);
 			result+= lightColor*softEdgeFactor;
 		}
 	}
 	return result;
+}
+
+float CalculateOmniShadowFactor(PointLight light, int index)
+{
+	vec3 fragToLight = fragPos - light.Position;
+	float closest = texture(omniShadowMap[index].shadowMap, fragToLight ).r;
+	cloest = closest * omniShadowMap[index].farPlane;
+	float currentDistance = length(fragToLight);
+	//compare the distance between the fragment and the light source
+	float shadowFactor = currentDistance > closest ? 0.0f : 1.0f;
+
+	return shadowFactor;
 }
 
 void main()                  

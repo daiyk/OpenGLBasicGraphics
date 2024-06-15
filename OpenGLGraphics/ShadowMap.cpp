@@ -47,11 +47,12 @@ void ShadowMap::WriteShadowMap()
 	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 }
 
-void ShadowMap::BindShadowMapTexture(int textureLayer)
+int ShadowMap::BindShadowMapTexture(int textureLayer)
 {
 	//bind the shadow map, so we can use it in the shader
 	glActiveTexture(GL_TEXTURE0+textureLayer); // GL_TEXTURE0, GL_TEXTURE1, etc.
 	glBindTexture(GL_TEXTURE_2D, m_shadowMap);
+	return textureLayer;
 }
 
 void ShadowMap::FinishWriteShadowMap()

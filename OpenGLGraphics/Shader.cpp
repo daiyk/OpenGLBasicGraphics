@@ -1,4 +1,5 @@
 #include "Shader.h"
+#include "Light.h"
 #include <cassert>
 
 Shader::Shader()
@@ -50,7 +51,7 @@ GLuint Shader::GetShaderLocation()
 	return shaderProgram;
 }
 
-void Shader::SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount)
+int Shader::SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount, unsigned int shadowMapStartUnit)
 {
 	assert(("Light count cannot exceeded the MACRO NUM_POINT_LIGHT!", _lightCount <= NUM_POINT_LIGHTS));
 	glUniform1i(pointLightsCountLoc, _lightCount);
@@ -65,7 +66,20 @@ void Shader::SetPointLights(PointLightVector& _pointLights, unsigned int _lightC
 			this->pointLights[i].uniformLinear, 
 			this->pointLights[i].uniformExponent
 		);
+		//bind the shadow map texture to the shader's texture Unit
+		_pointLights[i]->GetShadowMap()->BindShadowMapTexture(shadowMapStartUnit+i);
+		//tell the shader which texture unit we bind
+		glUniform1i(omniShadowMap[i].uniformShadowMap, shadowMapStartUnit + i);
+		//set the far plane
+		glUniform1f(omniShadowMap[i].uniformFarPlane, _pointLights[i]->GetFarPlane());
+
 	}
+	//TODO: debugging and delete this part if include spotlight, set the rest of unused point lights to 10
+	for (int j = _lightCount; j < NUM_POINT_LIGHTS+NUM_SPOT_LIGHTS; j++) {
+		glUniform1i(omniShadowMap[j].uniformShadowMap, 10);
+	}
+	//need to return the last index of the texture binding
+	return shadowMapStartUnit + _lightCount - 1;
 }
 void Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount)
 {
@@ -86,6 +100,7 @@ void Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCoun
 			this->spotLights[i].uniformEdge,
 			this->spotLights[i].uniformOuterEdge);
 	}
+	//TODO: delete the SetpointLight texture unit setting
 }
 void Shader::SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit)
 {
@@ -99,17 +114,17 @@ void Shader::SetDirectionalLightTransform(const glm::mat4* _lightTransform)
 }
 
 void Shader::SetUniformOmniLightPos(const glm::vec3 _lightPos) {
-	glUniform3fv(uniformOmniLightPos, 1, glm::value_ptr(_lightPos));
+	glUniform3fv(uniformOmniLightPosBuilding, 1, glm::value_ptr(_lightPos));
 }
 void Shader::SetOmniLightMatrices(const glm::mat4* _lightMatrices, GLuint _lightMatricesSize)
 {
 	for (int i = 0; i < _lightMatricesSize; i++) {
-		glUniformMatrix4fv(uniformOmnilightTransforms[i], 1, GL_FALSE, glm::value_ptr(_lightMatrices[i]));
+		glUniformMatrix4fv(uniformOmnilightTransformsBuilding[i], 1, GL_FALSE, glm::value_ptr(_lightMatrices[i]));
 	}
 }
 
 void Shader::SetFarPlane(float _farPlane) {
-	glUniform1f(uniformFarPlane, _farPlane);
+	glUniform1f(uniformFarPlaneBuilding, _farPlane);
 }
 void Shader::AssignUniformDiffuseIntensityLoc(const char* uniformName) {
 	baseLight.uniformDiffuseIntensity = glGetUniformLocation(shaderProgram, uniformName);
@@ -205,16 +220,6 @@ void Shader::CompileShader() {
 		printf("Error linking shader program: '%s'\n", infoLog);
 		return;
 	}
-	glValidateProgram(shaderProgram); //validate the shader program
-	//get the validation status after validating the shader program
-	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
-	if (!success)
-	{
-		char infoLog[1024];
-		glGetProgramInfoLog(shaderProgram, sizeof(infoLog), NULL, infoLog);
-		printf("Error validating shader program: '%s'\n", infoLog);
-		return;
-	}
 
 	//initialize the uniform variables
 	InitShaderUniformVariables();
@@ -251,7 +256,7 @@ void Shader::InitShaderUniformVariables() {
 	pointLightsCountLoc = glGetUniformLocation(shaderProgram, "pointLightCount");
 
 	//spotlight
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (int i = 0; i < NUM_SPOT_LIGHTS; i++)
 	{
 
 		char locBuff[100] = { '\0' };
@@ -284,19 +289,35 @@ void Shader::InitShaderUniformVariables() {
 	///---- end of setting up lights components' uniform locations ----///
 	/// --- set up shadow map uniform locations --- ///
 
-	//this part is for directional light shadow mapping, we may change it later to be more general
+	//this part is for directional light shadow mapping rendering, we may change it later to be more general
 	uniformShaderMap = GetUniformLocation("shadowMap");
 	uniformDirectionalLightTransform = GetUniformLocation("lightSpaceTransform");
 
-	//this part is for omni light shadow mapping ONLY, we may change it later to be more general
-	uniformOmniLightPos = GetUniformLocation("lightPos");
-	uniformFarPlane = GetUniformLocation("farPlane");
-
-	//bind omnilight transform array
-	for (int i = 0; i < sizeof(uniformOmnilightTransforms) / sizeof(*uniformOmnilightTransforms); i++) {
+	//this part is for omni light shadow map building ONLY, we may change it later to be more general
+	uniformOmniLightPosBuilding = GetUniformLocation("lightPos");
+	uniformFarPlaneBuilding = GetUniformLocation("farPlane");
+	//bind omnilight transform array for the building of omnilight shadow map
+	for (int i = 0; i < sizeof(uniformOmnilightTransformsBuilding) / sizeof(*uniformOmnilightTransformsBuilding); i++) {
 		char locBuff[100] = { '\0' };
 		snprintf(locBuff, sizeof(locBuff), "OmnilightSpaceMatrix[%d]", i);
-		uniformOmnilightTransforms[i] = glGetUniformLocation(shaderProgram, locBuff);
+		uniformOmnilightTransformsBuilding[i] = glGetUniformLocation(shaderProgram, locBuff);
+	}
+
+	//this part is for omni light shadow map rendering ONLY, we may change it later to be more general
+	for (int i = 0; i < NUM_POINT_LIGHTS; i++) {
+		char locBuff[100] = { '\0' };
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].shadowMap", i);
+		omniShadowMap[i].uniformShadowMap = glGetUniformLocation(shaderProgram, locBuff);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].farPlane", i);
+		omniShadowMap[i].uniformFarPlane = glGetUniformLocation(shaderProgram, locBuff);
+	}
+
+	for (int j=NUM_POINT_LIGHTS; j < NUM_POINT_LIGHTS + NUM_SPOT_LIGHTS; j++) {
+		char locBuff[100] = { '\0' };
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].shadowMap", j);
+		omniShadowMap[j].uniformShadowMap = glGetUniformLocation(shaderProgram, locBuff);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].farPlane", j);
+		omniShadowMap[j].uniformFarPlane = glGetUniformLocation(shaderProgram, locBuff);
 	}
 	/// --- End set up shadow map uniform locations --- ///
 }

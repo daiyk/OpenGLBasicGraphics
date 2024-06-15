@@ -8,7 +8,7 @@ public:
     OmniShadowMap();
     bool Init(GLuint width, GLuint height) override;
     void WriteShadowMap() override;
-    void BindShadowMapTexture(int textureLayer) override;
+    int BindShadowMapTexture(int textureLayer) override;
 private:
     GLuint m_width, m_height;
 };
