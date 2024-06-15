@@ -98,6 +98,9 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+# not files in model folder
+!OpenGLGraphics/Models/*.obj
+
 # Chutzpah Test files
 _Chutzpah*
 
