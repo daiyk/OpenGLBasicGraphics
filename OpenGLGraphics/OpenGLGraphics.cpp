@@ -210,27 +210,19 @@ int main()
     mainLight.CreateShadowMap(2048, 2048,0.1,100);
 
 
-    auto pl1 = std::make_unique<PointLight>(0.0f, 0.0f, 1.0f,
-        0.1f, 1.0f,
+    auto pl1 = std::make_unique<PointLight>(0.0f, 1.0f, 0.0f,
+        0.3f, 1.0f,
         2.0f, 2.0f, -2.0f,
         0.3f, 0.2f, 0.1f);
 	pl1->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
     auto pl2 = std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
-        0.6f, 1.0f,
+        0.3f, 1.0f,
         0.0f, 0.0f, -2.0f,
         0.3f, 0.2f, 0.1f);
 	pl2->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
 	pointLight.push_back(std::move(pl1));
 	pointLight.push_back(std::move(pl2));
-    //create point light
-    /*pointLight.push_back(std::make_unique<PointLight>(0.0f, 0.0f, 1.0f, 
-                               0.1f, 1.0f, 
-                               2.0f, 2.0f, -2.0f, 
-                               0.3f, 0.2f, 0.1f));
-    pointLight.push_back(std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
-                               0.6f, 1.0f,
-							   0.0f, 0.0f, -2.0f,
-							   0.3f, 0.2f, 0.1f));*/
+    
     unsigned int pointLightCount = pointLight.size();
 
     //create spot light

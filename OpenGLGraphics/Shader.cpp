@@ -310,6 +310,8 @@ void Shader::InitShaderUniformVariables() {
 		omniShadowMap[i].uniformShadowMap = glGetUniformLocation(shaderProgram, locBuff);
 		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].farPlane", i);
 		omniShadowMap[i].uniformFarPlane = glGetUniformLocation(shaderProgram, locBuff);
+		// assign the texture unit to the shadow map, and ensure Sampler3D points to different texture unit
+		glUniform1i(omniShadowMap[i].uniformShadowMap, 10);
 	}
 
 	for (int j=NUM_POINT_LIGHTS; j < NUM_POINT_LIGHTS + NUM_SPOT_LIGHTS; j++) {
@@ -318,6 +320,7 @@ void Shader::InitShaderUniformVariables() {
 		omniShadowMap[j].uniformShadowMap = glGetUniformLocation(shaderProgram, locBuff);
 		snprintf(locBuff, sizeof(locBuff), "omniShadowMap[%d].farPlane", j);
 		omniShadowMap[j].uniformFarPlane = glGetUniformLocation(shaderProgram, locBuff);
+		glUniform1i(omniShadowMap[j].uniformShadowMap, 10);
 	}
 	/// --- End set up shadow map uniform locations --- ///
 }

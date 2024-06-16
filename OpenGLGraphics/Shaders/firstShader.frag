@@ -40,9 +40,9 @@ struct SpotLight
 
 struct OmniShadowMap
 {
-	sampleCube shadowMap;
+	samplerCube shadowMap;
 	float farPlane;
-}
+};
 
 struct Material
 {
@@ -75,6 +75,9 @@ uniform sampler2D shadowMap;
 //includes shadow map for point light and spot light, notice that spotlights has a offset of NUM_POINT_LIGHTS
 uniform OmniShadowMap omniShadowMap[NUM_POINT_LIGHTS+NUM_SPOT_LIGHTS];
 uniform vec3 cameraPosition;
+
+//forward declaration
+float CalculateOmniShadowFactor(PointLight light, int index);
 
 float CalculateShadowFactor()
 {
@@ -138,7 +141,7 @@ vec4 CalPointLight(PointLight pointLight, int shadowIndex)
 		shadowFactor = CalculateOmniShadowFactor(pointLight, shadowIndex);
 	}
 	//reverse the light direction, now from the fragment to the light source
-    return vec4(CalLightByDirection(pointLight.base,-direction, 1.0f).xyz/attenuation, shadowFactor);
+    return vec4(CalLightByDirection(pointLight.base,-direction, shadowFactor).xyz/attenuation, 1.0f);
 }
 
 //compute single point light color
@@ -175,9 +178,10 @@ vec4 CalTotalSpotLight()
 
 float CalculateOmniShadowFactor(PointLight light, int index)
 {
-	vec3 fragToLight = fragPos - light.Position;
-	float closest = texture(omniShadowMap[index].shadowMap, fragToLight ).r;
-	cloest = closest * omniShadowMap[index].farPlane;
+	vec3 fragToLight = fragPos - light.position;
+	float closest = texture(omniShadowMap[index].shadowMap, fragToLight).r;
+	closest = closest * omniShadowMap[index].farPlane;
+
 	float currentDistance = length(fragToLight);
 	//compare the distance between the fragment and the light source
 	float shadowFactor = currentDistance > closest ? 0.0f : 1.0f;
@@ -190,5 +194,5 @@ void main()
     vec4 directionColor = CalDirectionalLight();
     vec4 pointColor = CalTotalPointLight();
     vec4 spotLight = CalTotalSpotLight();
-    colour = texture(texture_diffuse0, vTex) * (directionColor+pointColor+spotLight);
+    colour = texture(texture_diffuse0, vTex) * (pointColor);
 }
