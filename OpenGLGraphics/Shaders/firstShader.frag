@@ -194,7 +194,7 @@ float CalculateOmniShadowFactor(PointLight light, int index)
 	float currentDistance = length(fragToLight);
 	float bias = max(0.01 * (1.0 - dot(normalize(Normal), normalize(-fragToLight))), 0.005);
 	float shadowFactor = 0.0f;
-	for(int i = 0; i < 20; i++)
+	for(int i = 0; i < samples; i++)
 	{
 		float closest = texture(omniShadowMap[index].shadowMap, fragToLight + sampleOffsetDirections[i]*diskRadius).r;
 		closest = closest * omniShadowMap[index].farPlane;
@@ -202,7 +202,6 @@ float CalculateOmniShadowFactor(PointLight light, int index)
 		//compare the distance between the fragment and the light source
 		shadowFactor += currentDistance - bias > closest ? 0.0f : 1.0f;
 	}
-
 	return shadowFactor/float(samples);
 }
 
