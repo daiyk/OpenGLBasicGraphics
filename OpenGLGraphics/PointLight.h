@@ -8,8 +8,11 @@ class PointLight :
 {
 public :
 	PointLight();
-	PointLight(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLfloat dIntensity, GLfloat x, GLfloat y, GLfloat z, GLfloat constant, GLfloat linear, GLfloat exponent, GLfloat farPlane = 0.0f);
-	void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseLocation, GLuint positionLocation, GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation);
+	PointLight(GLfloat red, GLfloat green, GLfloat blue, GLfloat aIntensity, GLfloat dIntensity, 
+		GLfloat x, GLfloat y, GLfloat z, GLfloat constant, GLfloat linear, GLfloat exponent, 
+		GLfloat farPlane = 0.0f);
+	void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseLocation, 
+		GLuint positionLocation, GLuint constantLocation, GLuint linearLocation, GLuint exponentLocation);
 	bool CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane, GLfloat farPlane) override;
 	GLfloat GetFarPlane() { return farPlane; }
 	ShadowMap* GetShadowMap() { return shadowMap.get(); }

@@ -211,12 +211,12 @@ int main()
 
 
     auto pl1 = std::make_unique<PointLight>(0.0f, 1.0f, 0.0f,
-        0.3f, 1.0f,
-        2.0f, 2.0f, -2.0f,
+        0.1f, 2.0f,
+        0.0f, 2.0f, -2.0f,
         0.3f, 0.2f, 0.1f);
 	pl1->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
     auto pl2 = std::make_unique<PointLight>(1.0f, 0.0f, 0.0f,
-        0.3f, 1.0f,
+        0.1f, 2.0f,
         0.0f, 0.0f, -2.0f,
         0.3f, 0.2f, 0.1f);
 	pl2->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
@@ -226,18 +226,23 @@ int main()
     unsigned int pointLightCount = pointLight.size();
 
     //create spot light
-    spotLight.push_back(std::make_unique<SpotLight>(1.0f, 1.0f, 1.0f,
-        					0.1f, 4.0f,
-        					0.0f, 0.0f, -1.5f,
-        					glm::vec3(0.0f,0.0f,-1.0f),
-        					0.4f, 0.3f, 0.2f,
-        					5.0f, 30.0f));
-    spotLight.push_back(std::make_unique<SpotLight>(1.0f, 1.0f, 0.0f,
+    auto sl1 = std::make_unique<SpotLight>(1.0f, 1.0f, 1.0f,
+        0.1f, 3.0f,
+        0.0f, 0.0f, -1.5f,
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        0.4f, 0.3f, 0.2f,
+        5.0f, 30.0f);
+    sl1->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
+    auto sl2 = std::make_unique<SpotLight>(1.0f, 1.0f, 0.0f,
         0.1f, 2.0f,
         0.0f, 3.0f, -2.5f,
         glm::vec3(0.0f, -1.0f, 0.0f),
         1.0f, 0.0f, 0.0f,
-        20.0f, 30.f));
+        20.0f, 30.f);
+    sl2->CreateShadowMap(1024, 1024, 0.1f, 100.0f);
+    spotLight.push_back(std::move(sl1));
+    spotLight.push_back(std::move(sl2));
+
     unsigned int spotLightCount = spotLight.size();
     //-------End Light creation --------//
 
@@ -327,7 +332,7 @@ int main()
         glViewport(0, 0, mainLight.ShadowMapWidth(), mainLight.ShadowMapHeight());
         
         mainLight.WriteShadowMap();
-        glClear(GL_DEPTH_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT); //NOTICE: clear the depth buffer must be called after binding the FrameBuffer!
 
         //Get model location
         MoveLocation = shaderList[1]->GetModelLocation();
@@ -337,17 +342,33 @@ int main()
         mainLight.FinishShadowMap();
         
 		/// --- OmniShadowMap pass building for point light --- ///
+        shaderList[2]->UseShader();
+        shaderList[2]->Validate();
         for (int i = 0; i < pointLight.size(); i++) {
-            shaderList[2]->UseShader();
-            glClear(GL_DEPTH_BUFFER_BIT);
 			glViewport(0, 0, pointLight[i]->ShadowMapWidth(), pointLight[i]->ShadowMapHeight());
 			pointLight[i]->GetShadowMap()->WriteShadowMap();
+            glClear(GL_DEPTH_BUFFER_BIT); //NOTICE: clear the depth buffer must be called after binding the FrameBuffer!
+
 			MoveLocation = shaderList[2]->GetModelLocation();
 			shaderList[2]->SetUniformOmniLightPos(pointLight[i]->GetPosition());
 			shaderList[2]->SetOmniLightMatrices((*pointLight[i]->GetLightTransforms()).data(), (*pointLight[i]->GetLightTransforms()).size());
             shaderList[2]->SetFarPlane(pointLight[i]->GetFarPlane());
             renderer(*shaderList[2]);
 			pointLight[i]->GetShadowMap()->FinishWriteShadowMap();
+        }
+        //shaderList[2]->UseShader();
+        //shaderList[2]->Validate();
+        for (int j = 0; j < spotLight.size(); j++) {
+            glViewport(0, 0, spotLight[j]->ShadowMapWidth(), spotLight[j]->ShadowMapHeight());
+            spotLight[j]->GetShadowMap()->WriteShadowMap();
+            glClear(GL_DEPTH_BUFFER_BIT); //NOTICE: clear the depth buffer must be called after binding the FrameBuffer!
+
+            MoveLocation = shaderList[2]->GetModelLocation();
+            shaderList[2]->SetUniformOmniLightPos(spotLight[j]->GetPosition());
+            shaderList[2]->SetOmniLightMatrices((*spotLight[j]->GetLightTransforms()).data(), (*spotLight[j]->GetLightTransforms()).size());
+        	shaderList[2]->SetFarPlane(spotLight[j]->GetFarPlane());
+			renderer(*shaderList[2]);
+			spotLight[j]->GetShadowMap()->FinishWriteShadowMap();
         }
 
         /// ---- Rendering pass ---- ///
@@ -375,7 +396,7 @@ int main()
         
         //update the spot light pose to align with the camera before set the spotlights
         spotLight[0]->SetPose(camera.GetCameraPosition() + glm::vec3(0.0f, -0.5f, 0.0f), camera.GetFrontDirection());
-        shaderList[0]->SetSpotLights(spotLight, spotLightCount);
+        textureStartUnit = shaderList[0]->SetSpotLights(spotLight, spotLightCount,textureStartUnit)+1;
 
 
         /// ---- set the geometry, view and global transformation matrix ---- ///

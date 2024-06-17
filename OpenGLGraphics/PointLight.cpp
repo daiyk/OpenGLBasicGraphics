@@ -38,12 +38,12 @@ bool PointLight::CreateShadowMap(GLuint width, GLuint height, GLfloat nearPlane,
 	}
 	//compute projection matrix
 	projMatrix = glm::perspective(glm::radians(90.0f), (GLfloat)width / height, nearPlane, farPlane);
-	//compute six light transforms for each face
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(1, 0, 0), glm::vec3(0.0, 1.0, 0.0)));
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(-1, 0, 0), glm::vec3(0.0, 1.0, 0.0)));
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 1, 0), glm::vec3(0.0, 1.0, 0.0)));
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, -1, 0), glm::vec3(0.0, 1.0, 0.0)));
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 0, 1), glm::vec3(0.0, 1.0, 0.0)));
-	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 0, -1), glm::vec3(0.0, 1.0, 0.0)));
+	//compute six light transforms for each face, NOTICE: the order need to follows the order of transform cache created for the shadow map
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(1, 0, 0), glm::vec3(0.0, -1.0, 0.0)));
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(-1, 0, 0), glm::vec3(0.0, -1.0, 0.0)));
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 1, 0), glm::vec3(0.0, 0.0, 1.0)));
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, -1, 0), glm::vec3(0.0, 0.0, -1.0)));
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 0, 1), glm::vec3(0.0, -1.0, 0.0)));
+	lightTransforms.push_back(projMatrix * glm::lookAt(position, position + glm::vec3(0, 0, -1), glm::vec3(0.0, -1.0, 0.0)));
 	return true;
 }

@@ -9,7 +9,8 @@ class SpotLight: public PointLight
 			GLfloat x, GLfloat y, GLfloat z, 
 			glm::vec3 direction, 
 			GLfloat c, GLfloat l, GLfloat q, 
-			GLfloat edge, GLfloat outerEdge);
+			GLfloat edge, GLfloat outerEdge,
+			GLfloat farPlane = 0.0f);
 		void UseLight(GLuint ambientIntensityLocation, GLuint ambientColorLocation, GLuint diffuseStrengthLoc,
 			GLuint LightPositionLocation, GLuint LightDirectionLocation, 
 			GLuint constantLoc, GLuint linearLoc, GLuint quadraticLoc, 

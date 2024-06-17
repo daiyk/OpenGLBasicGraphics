@@ -74,14 +74,10 @@ int Shader::SetPointLights(PointLightVector& _pointLights, unsigned int _lightCo
 		glUniform1f(omniShadowMap[i].uniformFarPlane, _pointLights[i]->GetFarPlane());
 
 	}
-	//TODO: debugging and delete this part if include spotlight, set the rest of unused point lights to 10
-	for (int j = _lightCount; j < NUM_POINT_LIGHTS+NUM_SPOT_LIGHTS; j++) {
-		glUniform1i(omniShadowMap[j].uniformShadowMap, 10);
-	}
 	//need to return the last index of the texture binding
 	return shadowMapStartUnit + _lightCount - 1;
 }
-void Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount)
+int Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount, unsigned int shadowMapStartUnit)
 {
 	assert(("Light count cannot exceeded the MACRO NUM_SPOT_LIGHT!",_lightCount <= NUM_SPOT_LIGHTS));
 	
@@ -99,8 +95,14 @@ void Shader::SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCoun
 			this->spotLights[i].uniformSpotDirection,
 			this->spotLights[i].uniformEdge,
 			this->spotLights[i].uniformOuterEdge);
+		//bind the shadow map texture to the shader's texture Unit
+		_spotLights[i]->GetShadowMap()->BindShadowMapTexture(shadowMapStartUnit + i);
+		//tell the shader which texture unit we bind
+		glUniform1i(omniShadowMap[NUM_POINT_LIGHTS + i].uniformShadowMap, shadowMapStartUnit + i);
+		//set the far plane
+		glUniform1f(omniShadowMap[NUM_POINT_LIGHTS + i].uniformFarPlane, _spotLights[i]->GetFarPlane());
 	}
-	//TODO: delete the SetpointLight texture unit setting
+	return shadowMapStartUnit + _lightCount - 1;
 }
 void Shader::SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit)
 {

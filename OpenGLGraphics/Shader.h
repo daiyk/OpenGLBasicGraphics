@@ -54,7 +54,7 @@ public:
 
 
 	int SetPointLights(PointLightVector& _pointLights, unsigned int _lightCount, unsigned int shadowMapStartUnit);
-	void SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount);
+	int SetSpotLights(SpotLightVector& _spotLights, unsigned int _lightCount, unsigned int shadowMapStartUnit);
 	/// ----- shadow map components ----- ///
 	void SetUniformDirectionalShadowMap(std::string directionalShadowMapName, GLuint textureUnit);
 	void SetDirectionalLightTransform(const glm::mat4* _lightTransform);
