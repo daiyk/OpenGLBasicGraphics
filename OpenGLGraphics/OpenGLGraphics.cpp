@@ -26,6 +26,7 @@
 #include "MeshData.h"
 #include "ModelData.h"
 #include "PCHTypes.h"
+#include "Skybox.h"
 
 const GLint WIDTH = 1600, HEIGHT = 900; //set the window size
 GLuint VAO, VBO, EBO, shader, MoveLocation, ProjectionLocation, ViewLocation, ambientColorLoc, ambientIntensityLoc,matSpeculInt, matSpeculShin, diffuseIntensityLoc, LightDirectionLoc;
@@ -93,10 +94,10 @@ void CreateTriangle()
     };
 
     GLfloat floorVertices[] = {
-		-10.0f,0.0f,-10.0f,0.0f,0.0f,0.0f,1.0f,0.0f,
-		10.0f,0.0f,-10.0f,10.0f,0.0f,0.0f,1.0f,0.0f,
-		10.0f,0.0f,10.0f,10.0f,10.0f,0.0f,1.0f,0.0f,
-		-10.0f,0.0f,10.0f,0.0f,10.0f,0.0f,1.0f,0.0f
+		-5.0f,0.0f,-5.0f,0.0f,0.0f,0.0f,1.0f,0.0f,
+		5.0f,0.0f,-5.0f,10.0f,0.0f,0.0f,1.0f,0.0f,
+		5.0f,0.0f,5.0f,10.0f,10.0f,0.0f,1.0f,0.0f,
+		-5.0f,0.0f,5.0f,0.0f,10.0f,0.0f,1.0f,0.0f
 	};
 
     //build indices for the floor, two triangles meshes
@@ -246,6 +247,19 @@ int main()
     unsigned int spotLightCount = spotLight.size();
     //-------End Light creation --------//
 
+    //-----------------Skybox creation-----------------//
+    std::vector<std::string> skyboxFaces;
+    skyboxFaces.push_back("Texture/Skybox/posx.jpg");
+    skyboxFaces.push_back("Texture/Skybox/negx.jpg");
+    skyboxFaces.push_back("Texture/Skybox/posy.jpg");
+    skyboxFaces.push_back("Texture/Skybox/negy.jpg");
+    skyboxFaces.push_back("Texture/Skybox/posz.jpg");
+    skyboxFaces.push_back("Texture/Skybox/negz.jpg");
+    Skybox skybox(skyboxFaces);
+    //-----------------End Skybox creation-----------------//
+
+
+
     glEnable(GL_DEPTH_TEST); //enable depth testing
 
     /// --- import model --- ///
@@ -299,6 +313,7 @@ int main()
         dullMaterial.UseMaterial(matSpeculInt, matSpeculShin);
         modelData.RenderModel(shader);
     };
+    
     //loop until window closed
     while (!mainWindow.getShouldClose())
     {
@@ -341,6 +356,8 @@ int main()
         renderer(*shaderList[1]);
         mainLight.FinishShadowMap();
         
+       
+
 		/// --- OmniShadowMap pass building for point light --- ///
         shaderList[2]->UseShader();
         shaderList[2]->Validate();
@@ -372,9 +389,15 @@ int main()
         }
 
         /// ---- Rendering pass ---- ///
-        shaderList[0]->UseShader();
+        
         glViewport(0, 0, bufferWidth, bufferHeight);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        /// ----- Draw the skybox ----- ///
+        skybox.DrawSkybox(camera.GetViewMatrix(), projection);
+        
+        shaderList[0]->UseShader();
         MoveLocation = shaderList[0]->GetModelLocation();
         //unit start used for shadwMap texture
         int textureStartUnit = 3;
