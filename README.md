@@ -4,16 +4,18 @@ This project is a basic graphics implementation using OpenGL. It aims to provide
 
 ## Features
 
-- [ ] out-of-box usage
-- [ ] implement with modern stdandard c++ library
-- [ ] easy to understand and modify
+- [x] out-of-box usage
+- [x] implement with modern stdandard c++ library
+- [x] easy to understand and modify
 
 ## Getting Started
 Please check the [Prerequisites](#prerequisites) before running this project.
 To get started with this project, follow these steps:
 
 1. Clone this repository, use the following command:
-```git clone https://github.com/daiyk/OpenGLBasicGraphics.git
+```
+git clone https://github.com/daiyk/OpenGLBasicGraphics.git
+
 ```
 2. Open the project in Visual Studio 2019 or later.
 3. Build the project by pressing `Ctrl + B`, notice that this can take a while, since it will download all the dependencies.
