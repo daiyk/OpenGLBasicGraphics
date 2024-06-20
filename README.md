@@ -15,7 +15,6 @@ To get started with this project, follow these steps:
 1. Clone this repository, use the following command:
 ```
 git clone https://github.com/daiyk/OpenGLBasicGraphics.git
-
 ```
 2. Open the project in Visual Studio 2019 or later.
 3. Build the project by pressing `Ctrl + B`, notice that this can take a while, since it will download all the dependencies.
@@ -27,7 +26,7 @@ Before running this project, make sure you have the following prerequisites inst
 
 - Visual Studio 2019 or later, and desktop development with C++ workload.
 - vcpkg component checked in the visual studio installer's individual components list.
-- Turn on "Use Vcpkg Manifest" in the project properties, you can find it in Project Properties -> Configuration Properties -> vcpkg.
+- Turn on `Use Vcpkg Manifest` in the project properties, you can find it in `Project Properties -> Configuration Properties -> vcpkg`.
 
 ## Dependencies
 - OpenGL 4.6
@@ -35,6 +34,7 @@ Before running this project, make sure you have the following prerequisites inst
 - GLEW 2.1.0
 - GLM 
 - stb_image
+
 All these dependencies are managed by vcpkg, and are installed automatically when you build the project, you don't need to install them manually. 
 
 
