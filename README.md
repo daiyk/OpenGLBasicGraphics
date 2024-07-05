@@ -6,7 +6,7 @@ This project is a basic graphics implementation using OpenGL. It aims to provide
 
 - [x] out-of-box usage
 - [x] implement with modern stdandard c++ library
-- [x] easy to understand and modify
+- [x] all packages managed by vcpkg and easy to install and modify 
 
 ## Getting Started
 Please check the [Prerequisites](#prerequisites) before running this project.
